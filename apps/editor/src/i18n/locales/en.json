@@ -21,7 +21,8 @@
     "simulate": "Simulate",
     "compile": "Compile",
     "flash": "Flash",
-    "viewCode": "Code"
+    "viewCode": "Code",
+    "wiring": "Wiring"
   },
   "workflow": {
     "untitled": "Untitled project",
@@ -74,5 +75,52 @@
     "loop": "Loop #",
     "noSensors": "No sensors in workflow",
     "noOutputs": "Start simulation to see outputs"
+  },
+  "compile": {
+    "title": "Compilation",
+    "idle": "Click Compile to build the generated code",
+    "compiling": "Compiling...",
+    "success": "Compilation successful",
+    "error": "Compilation failed",
+    "size": "Size",
+    "duration": "Duration",
+    "viewCode": "View generated code"
+  },
+  "flash": {
+    "title": "Flash to board",
+    "detect": "Detect boards",
+    "refresh": "Refresh",
+    "noPort": "No board detected",
+    "selectPort": "Select a port",
+    "send": "Flash",
+    "cancel": "Cancel",
+    "success": "Code flashed successfully!",
+    "error": "Flash error"
+  },
+  "wiring": {
+    "title": "Wiring guide",
+    "progress": "Progress",
+    "reset": "Reset",
+    "complete": "Wiring complete — ready to flash!",
+    "empty": "Add blocks with components to see the wiring guide.",
+    "hint": "Check each connection as you wire your circuit."
+  },
+  "serial": {
+    "title": "Serial monitor",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "send": "Send",
+    "clear": "Clear",
+    "portLabel": "Port",
+    "baudRate": "Baud",
+    "graph": "Graph",
+    "waiting": "Waiting for data...",
+    "disconnected": "Connect a serial port to begin.",
+    "status": {
+      "connected": "Connected",
+      "connecting": "Connecting...",
+      "disconnected": "Disconnected",
+      "error": "Error"
+    }
   }
 }

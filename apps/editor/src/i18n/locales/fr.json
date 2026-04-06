@@ -21,7 +21,8 @@
     "simulate": "Simuler",
     "compile": "Compiler",
     "flash": "Envoyer",
-    "viewCode": "Code"
+    "viewCode": "Code",
+    "wiring": "Câblage"
   },
   "workflow": {
     "untitled": "Projet sans titre",
@@ -74,5 +75,52 @@
     "loop": "Boucle n°",
     "noSensors": "Aucun capteur dans le workflow",
     "noOutputs": "Lancez la simulation pour voir les sorties"
+  },
+  "compile": {
+    "title": "Compilation",
+    "idle": "Cliquez sur Compiler pour compiler le code",
+    "compiling": "Compilation en cours...",
+    "success": "Compilation réussie",
+    "error": "Échec de la compilation",
+    "size": "Taille",
+    "duration": "Durée",
+    "viewCode": "Voir le code généré"
+  },
+  "flash": {
+    "title": "Envoyer sur la carte",
+    "detect": "Détecter les cartes",
+    "refresh": "Actualiser",
+    "noPort": "Aucune carte détectée",
+    "selectPort": "Sélectionner un port",
+    "send": "Envoyer",
+    "cancel": "Annuler",
+    "success": "Code envoyé avec succès !",
+    "error": "Erreur lors de l'envoi"
+  },
+  "wiring": {
+    "title": "Guide de câblage",
+    "progress": "Progression",
+    "reset": "Réinitialiser",
+    "complete": "Câblage complet — prêt à flasher !",
+    "empty": "Ajoutez des blocs avec des composants pour voir le guide de câblage.",
+    "hint": "Cochez chaque connexion au fur et à mesure du câblage."
+  },
+  "serial": {
+    "title": "Moniteur série",
+    "connect": "Connecter",
+    "disconnect": "Déconnecter",
+    "send": "Envoyer",
+    "clear": "Effacer",
+    "portLabel": "Port",
+    "baudRate": "Baud",
+    "graph": "Graphique",
+    "waiting": "En attente de données...",
+    "disconnected": "Connectez un port série pour commencer.",
+    "status": {
+      "connected": "Connecté",
+      "connecting": "Connexion...",
+      "disconnected": "Déconnecté",
+      "error": "Erreur"
+    }
   }
 }

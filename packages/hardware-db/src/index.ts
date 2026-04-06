@@ -20,6 +20,7 @@ export interface BoardDefinition {
   voltage: number;
   pins: PinDefinition[];
   features: string[];
+  fqbn?: string;
 }
 
 // --- Registry ---
@@ -49,6 +50,7 @@ registerBoard({
   ram: 2048,
   flash: 32768,
   voltage: 5,
+  fqbn: "arduino:avr:uno",
   features: ["digital", "analog", "pwm", "i2c", "spi", "uart"],
   pins: [
     { number: 0, name: "D0/RX", types: ["digital", "uart"], position: { x: 0, y: 0 } },
@@ -83,6 +85,7 @@ registerBoard({
   ram: 520192,
   flash: 4194304,
   voltage: 3.3,
+  fqbn: "esp32:esp32:esp32",
   features: ["digital", "analog", "pwm", "i2c", "spi", "uart", "wifi", "bluetooth"],
   pins: [
     { number: 0, name: "GPIO0", types: ["digital", "pwm"], position: { x: 0, y: 0 } },
@@ -121,6 +124,7 @@ registerBoard({
   ram: 2048,
   flash: 32768,
   voltage: 5,
+  fqbn: "arduino:avr:nano:cpu=atmega328",
   features: ["digital", "analog", "pwm", "i2c", "spi", "uart"],
   pins: [
     { number: 0, name: "D0/RX", types: ["digital", "uart"], position: { x: 0, y: 0 } },
@@ -157,6 +161,7 @@ registerBoard({
   ram: 8192,
   flash: 262144,
   voltage: 5,
+  fqbn: "arduino:avr:mega:cpu=atmega2560",
   features: ["digital", "analog", "pwm", "i2c", "spi", "uart"],
   pins: [
     // Left side — digital pins
@@ -223,6 +228,7 @@ registerBoard({
   ram: 81920,
   flash: 4194304,
   voltage: 3.3,
+  fqbn: "esp8266:esp8266:nodemcuv2",
   features: ["digital", "analog", "pwm", "i2c", "spi", "uart", "wifi"],
   pins: [
     { number: 16, name: "D0/GPIO16", types: ["digital"], position: { x: 0, y: 0 } },
