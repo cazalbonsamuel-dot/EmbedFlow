@@ -13,6 +13,7 @@ import FlashDialog from "./components/FlashDialog/FlashDialog";
 import ProjectSelector from "./components/ProjectSelector/ProjectSelector";
 import ShortcutDialog from "./components/ShortcutDialog/ShortcutDialog";
 import TemplateDialog from "./components/TemplateDialog/TemplateDialog";
+import StatusBar from "./components/StatusBar/StatusBar";
 import { useWorkflowStore } from "./stores/workflow-store";
 import { useSimulationStore } from "./stores/simulation-store";
 import { useWiringStore } from "./stores/wiring-store";
@@ -343,6 +344,9 @@ function App() {
           {rightPanel === "property" && <PropertyPanel />}
         </div>
       </div>
+
+      {/* Status bar */}
+      <StatusBar />
 
       {/* Modals */}
       <FlashDialog />

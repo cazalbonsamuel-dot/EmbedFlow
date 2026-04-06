@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import SimulatorToolbar from "./SimulatorToolbar";
 import SensorControls from "./controls/SensorControls";
 import VisualizationZone from "./visualizations/VisualizationZone";
+import VariableWatch from "./VariableWatch";
 import SerialConsole from "./SerialConsole";
 
 export default function SimulatorPanel() {
@@ -27,6 +28,14 @@ export default function SimulatorPanel() {
         {/* Visualizations */}
         <div className="border-b border-gray-800">
           <VisualizationZone />
+        </div>
+
+        {/* Variable watch */}
+        <div className="border-b border-gray-800">
+          <div className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+            Variables
+          </div>
+          <VariableWatch />
         </div>
       </div>
 

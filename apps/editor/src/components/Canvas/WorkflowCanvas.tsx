@@ -10,7 +10,9 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import ActivityNode from "./ActivityNode";
+import NodeContextMenu from "./NodeContextMenu";
 import { useWorkflowStore } from "../../stores/workflow-store";
+import { useSimulationStore } from "../../stores/simulation-store";
 import { autoLayout } from "../../services/auto-layout";
 
 const nodeTypes = { activity: ActivityNode };
@@ -27,6 +29,9 @@ export default function WorkflowCanvas() {
   const { fitView } = useReactFlow();
 
   const [layoutDir, setLayoutDir] = useState<"TB" | "LR">("TB");
+  const [contextMenu, setContextMenu] = useState<{ nodeId: string; position: { x: number; y: number } } | null>(null);
+  const simStatus = useSimulationStore((s) => s.simulationStatus);
+  const isSimRunning = simStatus === "running";
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -61,7 +66,16 @@ export default function WorkflowCanvas() {
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
+    setContextMenu(null);
   }, [setSelectedNode]);
+
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: { id: string }) => {
+    event.preventDefault();
+    setContextMenu({
+      nodeId: node.id,
+      position: { x: event.clientX, y: event.clientY },
+    });
+  }, []);
 
   const handleAutoLayout = useCallback(() => {
     const currentNodes = useWorkflowStore.getState().nodes;
@@ -112,14 +126,15 @@ export default function WorkflowCanvas() {
         onDragOver={onDragOver}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
+        onNodeContextMenu={onNodeContextMenu}
         nodeTypes={nodeTypes}
         fitView
         selectionOnDrag
         multiSelectionKeyCode="Shift"
         deleteKeyCode={["Backspace", "Delete"]}
         defaultEdgeOptions={{
-          style: { stroke: "#6b7280", strokeWidth: 2 },
-          animated: false,
+          style: { stroke: isSimRunning ? "#3b82f6" : "#6b7280", strokeWidth: 2 },
+          animated: isSimRunning,
         }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#374151" />
@@ -168,6 +183,15 @@ export default function WorkflowCanvas() {
           </Panel>
         )}
       </ReactFlow>
+
+      {/* Context menu */}
+      {contextMenu && (
+        <NodeContextMenu
+          nodeId={contextMenu.nodeId}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }
