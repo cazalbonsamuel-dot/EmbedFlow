@@ -1,14 +1,17 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
   BackgroundVariant,
+  Panel,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import ActivityNode from "./ActivityNode";
 import { useWorkflowStore } from "../../stores/workflow-store";
+import { autoLayout } from "../../services/auto-layout";
 
 const nodeTypes = { activity: ActivityNode };
 
@@ -21,6 +24,9 @@ export default function WorkflowCanvas() {
   const addNode = useWorkflowStore((s) => s.addNode);
   const setSelectedNode = useWorkflowStore((s) => s.setSelectedNode);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const { fitView } = useReactFlow();
+
+  const [layoutDir, setLayoutDir] = useState<"TB" | "LR">("TB");
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -57,8 +63,45 @@ export default function WorkflowCanvas() {
     setSelectedNode(null);
   }, [setSelectedNode]);
 
+  const handleAutoLayout = useCallback(() => {
+    const currentNodes = useWorkflowStore.getState().nodes;
+    const currentEdges = useWorkflowStore.getState().edges;
+    if (currentNodes.length === 0) return;
+
+    const layoutedNodes = autoLayout(currentNodes, currentEdges, layoutDir);
+
+    // Apply positions via onNodesChange
+    const changes = layoutedNodes.map((n) => ({
+      type: "position" as const,
+      id: n.id,
+      position: n.position,
+    }));
+    onNodesChange(changes);
+
+    // Also update workflow positions
+    const state = useWorkflowStore.getState();
+    const updatedWorkflowNodes = state.workflow.nodes.map((wn) => {
+      const layouted = layoutedNodes.find((ln) => ln.id === wn.id);
+      return layouted ? { ...wn, position: layouted.position } : wn;
+    });
+
+    useWorkflowStore.setState({
+      workflow: {
+        ...state.workflow,
+        nodes: updatedWorkflowNodes,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+
+    setTimeout(() => fitView({ padding: 0.2 }), 50);
+  }, [layoutDir, onNodesChange, fitView]);
+
+  const toggleDirection = useCallback(() => {
+    setLayoutDir((d) => (d === "TB" ? "LR" : "TB"));
+  }, []);
+
   return (
-    <div ref={reactFlowWrapper} className="flex-1 h-full">
+    <div ref={reactFlowWrapper} className="flex-1 h-full relative">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -89,6 +132,41 @@ export default function WorkflowCanvas() {
           }}
           maskColor="rgba(0, 0, 0, 0.6)"
         />
+
+        {/* Auto-layout controls */}
+        {nodes.length > 1 && (
+          <Panel position="top-right" className="flex items-center gap-1">
+            <button
+              onClick={handleAutoLayout}
+              className="px-2.5 py-1.5 text-xs rounded-md bg-gray-800/90 hover:bg-gray-700 text-gray-300 border border-gray-700 shadow-md transition-colors backdrop-blur-sm"
+              title="Organiser automatiquement"
+            >
+              ✨ Auto-layout
+            </button>
+            <button
+              onClick={toggleDirection}
+              className="px-2 py-1.5 text-xs rounded-md bg-gray-800/90 hover:bg-gray-700 text-gray-400 border border-gray-700 shadow-md transition-colors backdrop-blur-sm"
+              title={layoutDir === "TB" ? "Vertical → Horizontal" : "Horizontal → Vertical"}
+            >
+              {layoutDir === "TB" ? "↕" : "↔"}
+            </button>
+          </Panel>
+        )}
+
+        {/* Empty state */}
+        {nodes.length === 0 && (
+          <Panel position="top-center" className="!top-1/3">
+            <div className="text-center px-8 py-6 rounded-xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-sm max-w-sm">
+              <div className="text-4xl mb-3 opacity-40">🔌</div>
+              <h3 className="text-sm font-semibold text-gray-300 mb-1">
+                Commencez votre projet
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Glissez un bloc depuis le panneau de gauche, ou utilisez un template pour démarrer rapidement.
+              </p>
+            </div>
+          </Panel>
+        )}
       </ReactFlow>
     </div>
   );

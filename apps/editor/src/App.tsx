@@ -12,6 +12,7 @@ import WiringView from "./components/WiringView/WiringView";
 import FlashDialog from "./components/FlashDialog/FlashDialog";
 import ProjectSelector from "./components/ProjectSelector/ProjectSelector";
 import ShortcutDialog from "./components/ShortcutDialog/ShortcutDialog";
+import TemplateDialog from "./components/TemplateDialog/TemplateDialog";
 import { useWorkflowStore } from "./stores/workflow-store";
 import { useSimulationStore } from "./stores/simulation-store";
 import { useWiringStore } from "./stores/wiring-store";
@@ -52,6 +53,7 @@ function App() {
 
   // UI state
   const [showShortcutDialog, setShowShortcutDialog] = useState(false);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [saveIndicator, setSaveIndicator] = useState(false);
   const [importToast, setImportToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -169,7 +171,7 @@ function App() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {/* Undo / Redo */}
             <button
               onClick={() => useWorkflowStore.temporal.getState().undo()}
@@ -184,6 +186,15 @@ function App() {
               title="Refaire (Ctrl+Y)"
             >
               ↪
+            </button>
+
+            {/* Templates */}
+            <button
+              onClick={() => setShowTemplateDialog(true)}
+              className="px-2 py-1.5 text-xs rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+              title="Templates"
+            >
+              📋
             </button>
 
             <div className="w-px h-6 bg-gray-700 mx-0.5" />
@@ -336,6 +347,7 @@ function App() {
       {/* Modals */}
       <FlashDialog />
       <ShortcutDialog open={showShortcutDialog} onClose={() => setShowShortcutDialog(false)} />
+      <TemplateDialog open={showTemplateDialog} onClose={() => setShowTemplateDialog(false)} />
     </ReactFlowProvider>
   );
 }

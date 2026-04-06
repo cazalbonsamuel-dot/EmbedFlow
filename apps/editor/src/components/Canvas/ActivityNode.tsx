@@ -3,6 +3,7 @@ import { Handle, Position } from "@xyflow/react";
 import type { NodeProps, Node } from "@xyflow/react";
 import { getActivity } from "@embedflow/activity-registry";
 import type { ActivityNodeData } from "../../stores/workflow-store";
+import { useWorkflowStore } from "../../stores/workflow-store";
 import { useSimulationStore } from "../../stores/simulation-store";
 
 const portTypeColors: Record<string, string> = {
@@ -17,23 +18,52 @@ function ActivityNode({ id, data, selected }: NodeProps<Node<ActivityNodeData>>)
   const currentNodeId = useSimulationStore((s) => s.currentNodeId);
   const errorNodeId = useSimulationStore((s) => s.errorNodeId);
   const simStatus = useSimulationStore((s) => s.simulationStatus);
+  const validationMessages = useWorkflowStore((s) => s.validationMessages);
   if (!activity) return null;
 
   const isSimActive = simStatus !== "idle";
   const isCurrent = isSimActive && currentNodeId === id;
   const isError = isSimActive && errorNodeId === id;
 
+  // Validation badges
+  const nodeErrors = validationMessages.filter((m) => m.nodeId === id && m.level === "error");
+  const nodeWarnings = validationMessages.filter((m) => m.nodeId === id && m.level === "warning");
+  const hasErrors = nodeErrors.length > 0;
+  const hasWarnings = nodeWarnings.length > 0;
+
   let borderClass = selected ? "border-blue-400 ring-2 ring-blue-400/30" : "border-gray-700";
   if (isError) {
     borderClass = "border-red-500 ring-2 ring-red-500/30";
   } else if (isCurrent) {
     borderClass = "border-blue-400 ring-2 ring-blue-400/30 animate-pulse";
+  } else if (hasErrors && !selected) {
+    borderClass = "border-red-500/60";
+  } else if (hasWarnings && !selected) {
+    borderClass = "border-yellow-500/50";
   }
 
   return (
     <div
-      className={`rounded-lg shadow-lg bg-gray-800 border-2 min-w-[180px] ${borderClass}`}
+      className={`rounded-lg shadow-lg bg-gray-800 border-2 min-w-[180px] relative ${borderClass}`}
     >
+      {/* Validation badge */}
+      {(hasErrors || hasWarnings) && (
+        <div
+          className={`absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md z-10 ${
+            hasErrors
+              ? "bg-red-600 text-white"
+              : "bg-yellow-500 text-yellow-950"
+          }`}
+          title={
+            hasErrors
+              ? nodeErrors.map((m) => m.message).join("\n")
+              : nodeWarnings.map((m) => m.message).join("\n")
+          }
+        >
+          {hasErrors ? nodeErrors.length : nodeWarnings.length}
+        </div>
+      )}
+
       {/* Header */}
       <div
         className="flex items-center gap-2 px-3 py-2 rounded-t-md text-white text-sm font-medium"
