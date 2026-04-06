@@ -20,15 +20,20 @@
     "confirm": "Confirm",
     "simulate": "Simulate",
     "compile": "Compile",
-    "flash": "Flash to board",
-    "viewCode": "View code"
+    "flash": "Flash",
+    "viewCode": "Code"
   },
   "workflow": {
     "untitled": "Untitled project",
-    "addNode": "Add block",
-    "deleteNode": "Delete block",
+    "addNode": "Search...",
+    "deleteNode": "Delete this block",
     "validate": "Validate",
     "generate": "Generate code"
+  },
+  "properties": {
+    "selectBlock": "Select a block to see its properties",
+    "options": "Options",
+    "expert": "Advanced mode"
   },
   "status": {
     "ready": "Ready",
@@ -48,6 +53,26 @@
     "variables": "Variables"
   },
   "language": {
-    "toggle": "Francais"
+    "toggle": "FR"
+  },
+  "simulator": {
+    "title": "Simulator",
+    "play": "Play",
+    "pause": "Pause",
+    "step": "Step",
+    "reset": "Reset",
+    "speed": "Speed",
+    "sensors": "Simulated sensors",
+    "outputs": "Outputs",
+    "serial": "Serial console",
+    "clearSerial": "Clear",
+    "success": "Workflow is running",
+    "error": "Error",
+    "ready": "Ready",
+    "running": "Running",
+    "paused": "Paused",
+    "loop": "Loop #",
+    "noSensors": "No sensors in workflow",
+    "noOutputs": "Start simulation to see outputs"
   }
 }

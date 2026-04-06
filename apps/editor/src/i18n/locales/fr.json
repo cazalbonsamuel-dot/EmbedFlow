@@ -20,15 +20,20 @@
     "confirm": "Confirmer",
     "simulate": "Simuler",
     "compile": "Compiler",
-    "flash": "Envoyer sur la carte",
-    "viewCode": "Voir le code"
+    "flash": "Envoyer",
+    "viewCode": "Code"
   },
   "workflow": {
     "untitled": "Projet sans titre",
-    "addNode": "Ajouter un bloc",
-    "deleteNode": "Supprimer le bloc",
+    "addNode": "Rechercher...",
+    "deleteNode": "Supprimer ce bloc",
     "validate": "Valider",
     "generate": "Generer le code"
+  },
+  "properties": {
+    "selectBlock": "Selectionnez un bloc pour voir ses proprietes",
+    "options": "Options",
+    "expert": "Mode avance"
   },
   "status": {
     "ready": "Pret",
@@ -48,6 +53,26 @@
     "variables": "Variables"
   },
   "language": {
-    "toggle": "English"
+    "toggle": "EN"
+  },
+  "simulator": {
+    "title": "Simulateur",
+    "play": "Lancer",
+    "pause": "Pause",
+    "step": "Pas a pas",
+    "reset": "Reinitialiser",
+    "speed": "Vitesse",
+    "sensors": "Capteurs simules",
+    "outputs": "Sorties",
+    "serial": "Console serie",
+    "clearSerial": "Effacer",
+    "success": "Le workflow fonctionne",
+    "error": "Erreur",
+    "ready": "Pret",
+    "running": "En cours",
+    "paused": "En pause",
+    "loop": "Boucle n°",
+    "noSensors": "Aucun capteur dans le workflow",
+    "noOutputs": "Lancez la simulation pour voir les sorties"
   }
 }
