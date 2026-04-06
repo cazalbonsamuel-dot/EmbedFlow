@@ -22,7 +22,34 @@
     "compile": "Compile",
     "flash": "Flash",
     "viewCode": "Code",
-    "wiring": "Wiring"
+    "wiring": "Wiring",
+    "undo": "Undo",
+    "redo": "Redo",
+    "saved": "Saved!",
+    "shortcuts": "Shortcuts"
+  },
+  "projects": {
+    "title": "Projects",
+    "new": "New project",
+    "delete": "Delete project",
+    "deleteConfirm": "Delete this project? This cannot be undone.",
+    "current": "(current)",
+    "empty": "No saved projects."
+  },
+  "import": {
+    "success": "Workflow imported successfully",
+    "error": "Invalid workflow file"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "undo": "Undo",
+    "redo": "Redo",
+    "save": "Save project",
+    "copy": "Copy selected blocks",
+    "paste": "Paste blocks",
+    "exportWf": "Export workflow",
+    "delete": "Delete selected blocks",
+    "help": "Show this dialog"
   },
   "workflow": {
     "untitled": "Untitled project",

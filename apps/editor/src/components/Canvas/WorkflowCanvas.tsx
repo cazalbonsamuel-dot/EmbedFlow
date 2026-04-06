@@ -71,6 +71,8 @@ export default function WorkflowCanvas() {
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         fitView
+        selectionOnDrag
+        multiSelectionKeyCode="Shift"
         deleteKeyCode={["Backspace", "Delete"]}
         defaultEdgeOptions={{
           style: { stroke: "#6b7280", strokeWidth: 2 },

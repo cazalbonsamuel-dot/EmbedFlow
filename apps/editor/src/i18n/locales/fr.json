@@ -22,7 +22,34 @@
     "compile": "Compiler",
     "flash": "Envoyer",
     "viewCode": "Code",
-    "wiring": "Câblage"
+    "wiring": "Câblage",
+    "undo": "Annuler",
+    "redo": "Refaire",
+    "saved": "Sauvé !",
+    "shortcuts": "Raccourcis"
+  },
+  "projects": {
+    "title": "Projets",
+    "new": "Nouveau projet",
+    "delete": "Supprimer le projet",
+    "deleteConfirm": "Supprimer ce projet ? Cette action est irréversible.",
+    "current": "(actuel)",
+    "empty": "Aucun projet sauvegardé."
+  },
+  "import": {
+    "success": "Workflow importé avec succès",
+    "error": "Fichier de workflow invalide"
+  },
+  "shortcuts": {
+    "title": "Raccourcis clavier",
+    "undo": "Annuler",
+    "redo": "Refaire",
+    "save": "Sauvegarder le projet",
+    "copy": "Copier les blocs sélectionnés",
+    "paste": "Coller les blocs",
+    "exportWf": "Exporter le workflow",
+    "delete": "Supprimer les blocs sélectionnés",
+    "help": "Afficher cette aide"
   },
   "workflow": {
     "untitled": "Projet sans titre",
