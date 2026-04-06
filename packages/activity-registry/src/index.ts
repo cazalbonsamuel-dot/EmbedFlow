@@ -1,114 +1,71 @@
-// --- Types ---
+// Core types
+export type {
+  PropertyOption,
+  PropertyValidation,
+  PropertyDef,
+  PortDef,
+  LibraryDep,
+  WiringInstruction,
+  SimulateConfig,
+  CodegenConfig,
+  ActivityDefinition,
+} from "./core/types.js";
 
-export interface PropertyOption {
-  label: string;
-  value: string;
-  icon?: string;
-  photo?: string;
-}
+// Registry functions
+export {
+  registerActivity,
+  getActivity,
+  listActivities,
+  listByCategory,
+  getCategories,
+  validateCompatibility,
+} from "./core/registry.js";
 
-export interface PropertyValidation {
-  rule: string;
-  errorMessage: string;
-}
+// Activities — side-effect imports to trigger self-registration
 
-export interface PropertyDef {
-  name: string;
-  label: string;
-  type: "choice" | "pin" | "number" | "slider" | "toggle" | "text" | "variable";
-  required: boolean;
-  level: "essential" | "options" | "expert";
-  default?: unknown;
-  options?: PropertyOption[];
-  validation?: PropertyValidation;
-  helpText?: string;
-}
+// GPIO
+import "./activities/gpio/turn-on.js";
+import "./activities/gpio/turn-off.js";
+import "./activities/gpio/vary-intensity.js";
 
-export interface PortDef {
-  id: string;
-  name: string;
-  type: "execution" | "number" | "boolean" | "string";
-}
+// Capteurs
+import "./activities/sensors/read-temperature.js";
+import "./activities/sensors/read-humidity.js";
+import "./activities/sensors/read-distance.js";
+import "./activities/sensors/detect-motion.js";
+import "./activities/sensors/read-light.js";
+import "./activities/sensors/read-button.js";
+import "./activities/sensors/read-potentiometer.js";
 
-export interface LibraryDep {
-  name: string;
-  version: string;
-}
+// Actuateurs
+import "./activities/actuators/servo.js";
+import "./activities/actuators/motor.js";
+import "./activities/actuators/relay.js";
+import "./activities/actuators/buzzer.js";
 
-export interface WiringInstruction {
-  from: string;
-  to: string;
-  color: string;
-  label: string;
-}
+// Affichage
+import "./activities/display/lcd.js";
+import "./activities/display/oled.js";
+import "./activities/display/neopixel.js";
 
-export interface SimulateConfig {
-  defaultValue: unknown;
-  range?: [number, number];
-  unit?: string;
-  controlType: "slider" | "toggle" | "button" | "input";
-}
+// Logique
+import "./activities/logic/if-then.js";
+import "./activities/logic/while-loop.js";
+import "./activities/logic/repeat.js";
+import "./activities/logic/switch-case.js";
 
-export interface CodegenConfig {
-  libraries: LibraryDep[];
-  includes: string[];
-  globals: (props: Record<string, unknown>) => string;
-  setup: (props: Record<string, unknown>) => string;
-  loop: (
-    props: Record<string, unknown>,
-    inputs: Record<string, string>,
-    outputs: Record<string, string>,
-  ) => string;
-  errorHandling?: (props: Record<string, unknown>) => string;
-}
+// Temps
+import "./activities/timing/wait.js";
+import "./activities/timing/interval.js";
 
-export interface ActivityDefinition {
-  id: string;
-  category: string;
-  label: string;
-  icon: string;
-  description: string;
-  color: string;
-  supportedBoards: string[];
-  properties: PropertyDef[];
-  inputs: PortDef[];
-  outputs: PortDef[];
-  codegen: CodegenConfig;
-  validate: (
-    props: Record<string, unknown>,
-    context: { usedPins: Set<number>; boardId: string },
-  ) => { valid: boolean; messages: string[] };
-  wiring: (
-    props: Record<string, unknown>,
-    board: { id: string },
-  ) => WiringInstruction[];
-  simulate: SimulateConfig;
-}
+// Communication
+import "./activities/communication/serial-send.js";
+import "./activities/communication/wifi-connect.js";
+import "./activities/communication/http-send.js";
 
-// --- Registry ---
-
-const registry = new Map<string, ActivityDefinition>();
-
-export function registerActivity(definition: ActivityDefinition): void {
-  registry.set(definition.id, definition);
-}
-
-export function getActivity(id: string): ActivityDefinition | undefined {
-  return registry.get(id);
-}
-
-export function listActivities(): ActivityDefinition[] {
-  return Array.from(registry.values());
-}
-
-export function listByCategory(category: string): ActivityDefinition[] {
-  return Array.from(registry.values()).filter((a) => a.category === category);
-}
-
-export function getCategories(): string[] {
-  const categories = new Set<string>();
-  for (const activity of registry.values()) {
-    categories.add(activity.category);
-  }
-  return Array.from(categories);
-}
+// Variables
+import "./activities/variables/assign.js";
+import "./activities/variables/calculate.js";
+import "./activities/variables/compare.js";
+import "./activities/variables/constrain.js";
+import "./activities/variables/map-range.js";
