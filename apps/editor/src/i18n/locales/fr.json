@@ -1,0 +1,53 @@
+{
+  "app": {
+    "title": "EmbedFlow",
+    "subtitle": "Programmez vos cartes sans coder"
+  },
+  "nav": {
+    "editor": "Editeur",
+    "projects": "Projets",
+    "settings": "Parametres",
+    "hardware": "Materiel",
+    "codegen": "Code"
+  },
+  "actions": {
+    "save": "Sauvegarder",
+    "export": "Exporter",
+    "import": "Importer",
+    "newProject": "Nouveau projet",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "simulate": "Simuler",
+    "compile": "Compiler",
+    "flash": "Envoyer sur la carte",
+    "viewCode": "Voir le code"
+  },
+  "workflow": {
+    "untitled": "Projet sans titre",
+    "addNode": "Ajouter un bloc",
+    "deleteNode": "Supprimer le bloc",
+    "validate": "Valider",
+    "generate": "Generer le code"
+  },
+  "status": {
+    "ready": "Pret",
+    "saving": "Sauvegarde en cours...",
+    "error": "Erreur",
+    "connected": "Connecte",
+    "disconnected": "Deconnecte"
+  },
+  "categories": {
+    "control": "Controle",
+    "sensors": "Capteurs",
+    "actuators": "Actuateurs",
+    "display": "Affichage",
+    "logic": "Logique",
+    "timing": "Temps",
+    "communication": "Communication",
+    "variables": "Variables"
+  },
+  "language": {
+    "toggle": "English"
+  }
+}

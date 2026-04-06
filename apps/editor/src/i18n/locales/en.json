@@ -1,0 +1,53 @@
+{
+  "app": {
+    "title": "EmbedFlow",
+    "subtitle": "Program your boards without coding"
+  },
+  "nav": {
+    "editor": "Editor",
+    "projects": "Projects",
+    "settings": "Settings",
+    "hardware": "Hardware",
+    "codegen": "Code"
+  },
+  "actions": {
+    "save": "Save",
+    "export": "Export",
+    "import": "Import",
+    "newProject": "New project",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "simulate": "Simulate",
+    "compile": "Compile",
+    "flash": "Flash to board",
+    "viewCode": "View code"
+  },
+  "workflow": {
+    "untitled": "Untitled project",
+    "addNode": "Add block",
+    "deleteNode": "Delete block",
+    "validate": "Validate",
+    "generate": "Generate code"
+  },
+  "status": {
+    "ready": "Ready",
+    "saving": "Saving...",
+    "error": "Error",
+    "connected": "Connected",
+    "disconnected": "Disconnected"
+  },
+  "categories": {
+    "control": "Control",
+    "sensors": "Sensors",
+    "actuators": "Actuators",
+    "display": "Display",
+    "logic": "Logic",
+    "timing": "Timing",
+    "communication": "Communication",
+    "variables": "Variables"
+  },
+  "language": {
+    "toggle": "Francais"
+  }
+}
