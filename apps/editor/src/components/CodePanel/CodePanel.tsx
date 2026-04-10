@@ -7,25 +7,47 @@ import { useWorkflowStore } from "../../stores/workflow-store";
 
 // Simple syntax highlighter for C/C++ Arduino code
 function highlightCode(code: string): string {
-  return code
-    // Comments
-    .replace(/(\/\/.*)/g, '<span class="text-gray-500">$1</span>')
-    // Preprocessor directives
+  const placeholders = new Map<string, string>();
+  let idx = 0;
+
+  // Step 1: extract strings and comments as placeholders so later regexes
+  // don't corrupt their content or the HTML class attributes we inject.
+  let result = code
+    // Strings first
+    .replace(/"(?:[^"\\]|\\.)*"/g, (m) => {
+      const key = `\x01S${idx++}\x01`;
+      placeholders.set(key, `<span class="text-amber-300">${m}</span>`);
+      return key;
+    })
+    // Line comments
+    .replace(/\/\/.*/g, (m) => {
+      const key = `\x01C${idx++}\x01`;
+      placeholders.set(key, `<span class="text-gray-500">${m}</span>`);
+      return key;
+    });
+
+  // Step 2: highlight remaining code tokens (no HTML in result yet).
+  // Numbers MUST run first — before any other replacement injects HTML class
+  // names containing digits (e.g. "text-purple-400"), otherwise those digits
+  // would get re-wrapped in cyan spans and corrupt the HTML.
+  result = result
+    .replace(/\b(\d+\.?\d*)\b/g, '<span class="text-cyan-300">$1</span>')
     .replace(/(#\w+)/g, '<span class="text-purple-400">$1</span>')
-    // Strings
-    .replace(/("(?:[^"\\]|\\.)*")/g, '<span class="text-amber-300">$1</span>')
-    // Keywords
     .replace(
       /\b(void|int|float|bool|char|long|unsigned|const|if|else|for|while|switch|case|break|default|return|true|false|HIGH|LOW|INPUT|OUTPUT|INPUT_PULLUP)\b/g,
       '<span class="text-blue-400">$1</span>',
     )
-    // Numbers
-    .replace(/\b(\d+\.?\d*)\b/g, '<span class="text-cyan-300">$1</span>')
-    // Arduino functions
     .replace(
       /\b(pinMode|digitalWrite|digitalRead|analogWrite|analogRead|delay|delayMicroseconds|millis|tone|noTone|map|constrain|Serial|WiFi|Wire|pulseIn)\b/g,
       '<span class="text-green-400">$1</span>',
     );
+
+  // Step 3: restore placeholders
+  for (const [key, value] of placeholders) {
+    result = result.replace(key, value);
+  }
+
+  return result;
 }
 
 export default function CodePanel() {

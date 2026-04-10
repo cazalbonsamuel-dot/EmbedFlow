@@ -5,6 +5,7 @@ import { getActivity } from "@embedflow/activity-registry";
 import type { ActivityNodeData } from "../../stores/workflow-store";
 import { useWorkflowStore } from "../../stores/workflow-store";
 import { useSimulationStore } from "../../stores/simulation-store";
+import { getEffectiveActivity } from "../../services/effective-activity";
 
 const portTypeColors: Record<string, string> = {
   execution: "#6b7280",
@@ -14,7 +15,19 @@ const portTypeColors: Record<string, string> = {
 };
 
 function ActivityNode({ id, data, selected }: NodeProps<Node<ActivityNodeData>>) {
-  const activity = getActivity(data.activityId);
+  const projectWorkflows = useWorkflowStore((s) => s.projectWorkflows);
+  const allWorkflowData = useWorkflowStore((s) => s.allWorkflowData);
+  const currentWorkflow = useWorkflowStore((s) => s.workflow);
+
+  const getWorkflowArgs = (wfId: string) => {
+    if (wfId === currentWorkflow.id) return currentWorkflow.arguments || [];
+    return allWorkflowData[wfId]?.workflow.arguments || [];
+  };
+
+  const activity = data.activityId === "workflow.invoke"
+    ? getEffectiveActivity(data.activityId, data.properties, projectWorkflows, getWorkflowArgs)
+    : getActivity(data.activityId);
+
   const currentNodeId = useSimulationStore((s) => s.currentNodeId);
   const errorNodeId = useSimulationStore((s) => s.errorNodeId);
   const simStatus = useSimulationStore((s) => s.simulationStatus);

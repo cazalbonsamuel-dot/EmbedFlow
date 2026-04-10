@@ -18,15 +18,19 @@ const interval: ActivityDefinition = {
   outputs: [{ id: "exec_body", name: "Faire", type: "execution" }],
   codegen: {
     libraries: [], includes: [],
-    globals: () => "unsigned long lastRun = 0;",
+    globals: (_props, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
+      return `unsigned long lastRun_${id} = 0;`;
+    },
     setup: () => "",
-    loop: (props) => {
+    loop: (props, _inputs, _outputs, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
       const val = props.intervalle as number || 1000;
       const unite = props.unite as string || "ms";
       let ms = val;
       if (unite === "sec") ms = val * 1000;
       if (unite === "min") ms = val * 60000;
-      return `if (millis() - lastRun >= ${ms}) {\n  lastRun = millis();\n  // Actions a intervalle\n}`;
+      return `if (millis() - lastRun_${id} >= ${ms}UL) {\n  lastRun_${id} = millis();\n  // Actions a intervalle\n}`;
     },
   },
   validate: (props) => {

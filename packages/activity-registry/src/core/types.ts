@@ -47,15 +47,20 @@ export interface SimulateConfig {
   controlType: "slider" | "toggle" | "button" | "input";
 }
 
+export interface CodegenContext {
+  nodeId: string;
+}
+
 export interface CodegenConfig {
-  libraries: LibraryDep[];
-  includes: string[];
-  globals: (props: Record<string, unknown>) => string;
-  setup: (props: Record<string, unknown>) => string;
+  libraries: LibraryDep[] | ((props: Record<string, unknown>) => LibraryDep[]);
+  includes: string[] | ((props: Record<string, unknown>) => string[]);
+  globals: (props: Record<string, unknown>, ctx?: CodegenContext) => string;
+  setup: (props: Record<string, unknown>, ctx?: CodegenContext) => string;
   loop: (
     props: Record<string, unknown>,
     inputs: Record<string, string>,
     outputs: Record<string, string>,
+    ctx?: CodegenContext,
   ) => string;
   errorHandling?: (props: Record<string, unknown>) => string;
 }

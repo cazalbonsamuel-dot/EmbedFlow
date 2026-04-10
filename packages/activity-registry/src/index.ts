@@ -63,6 +63,9 @@ import "./activities/communication/serial-send.js";
 import "./activities/communication/wifi-connect.js";
 import "./activities/communication/http-send.js";
 
+// Sous-programmes
+import "./activities/workflow/invoke.js";
+
 // Variables
 import "./activities/variables/assign.js";
 import "./activities/variables/calculate.js";

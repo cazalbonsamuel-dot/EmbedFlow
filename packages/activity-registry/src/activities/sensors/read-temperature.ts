@@ -1,39 +1,43 @@
 import { registerActivity } from "../../core/registry.js";
 import type { ActivityDefinition } from "../../core/types.js";
 
+import type { LibraryDep } from "../../core/types.js";
+
 const sensorConfigs: Record<string, {
-  library: { name: string; version: string };
-  include: string;
+  libraries: LibraryDep[];
+  includes: string[];
   globalDecl: (pin: number) => string;
   setupCode: () => string;
   readCode: (varName: string) => string;
 }> = {
   DHT11: {
-    library: { name: "DHT sensor library", version: "^1.4" },
-    include: "DHT.h",
+    libraries: [{ name: "DHT sensor library", version: "^1.4" }],
+    includes: ["DHT.h"],
     globalDecl: (pin) => `#define DHTPIN ${pin}\n#define DHTTYPE DHT11\nDHT dht(DHTPIN, DHTTYPE);`,
     setupCode: () => "dht.begin();",
     readCode: (v) => `float ${v} = dht.readTemperature();`,
   },
   DHT22: {
-    library: { name: "DHT sensor library", version: "^1.4" },
-    include: "DHT.h",
+    libraries: [{ name: "DHT sensor library", version: "^1.4" }],
+    includes: ["DHT.h"],
     globalDecl: (pin) => `#define DHTPIN ${pin}\n#define DHTTYPE DHT22\nDHT dht(DHTPIN, DHTTYPE);`,
     setupCode: () => "dht.begin();",
     readCode: (v) => `float ${v} = dht.readTemperature();`,
   },
   BMP280: {
-    library: { name: "Adafruit BMP280 Library", version: "^2.6" },
-    include: "Adafruit_BMP280.h",
+    libraries: [{ name: "Adafruit BMP280 Library", version: "^2.6" }],
+    includes: ["Adafruit_BMP280.h"],
     globalDecl: () => "Adafruit_BMP280 bmp;",
     setupCode: () => `if (!bmp.begin(0x76)) {\n    // Capteur BMP280 non detecte\n  }`,
     readCode: (v) => `float ${v} = bmp.readTemperature();`,
   },
   DS18B20: {
-    library: { name: "DallasTemperature", version: "^3.9" },
-    include: "DallasTemperature.h",
-    globalDecl: (pin) =>
-      `#include <OneWire.h>\nOneWire oneWire(${pin});\nDallasTemperature dallas(&oneWire);`,
+    libraries: [
+      { name: "OneWire", version: "^2.3" },
+      { name: "DallasTemperature", version: "^3.9" },
+    ],
+    includes: ["OneWire.h", "DallasTemperature.h"],
+    globalDecl: (pin) => `OneWire oneWire(${pin});\nDallasTemperature dallas(&oneWire);`,
     setupCode: () => "dallas.begin();",
     readCode: (v) => `dallas.requestTemperatures();\nfloat ${v} = dallas.getTempCByIndex(0);`,
   },
@@ -98,8 +102,8 @@ const readTemperature: ActivityDefinition = {
   ],
 
   codegen: {
-    libraries: [],
-    includes: [],
+    libraries: (props) => sensorConfigs[(props.capteur as string) || "DHT22"]?.libraries ?? [],
+    includes: (props) => sensorConfigs[(props.capteur as string) || "DHT22"]?.includes ?? [],
 
     globals: (props) => {
       const capteur = (props.capteur as string) || "DHT22";

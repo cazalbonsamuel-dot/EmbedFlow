@@ -11,6 +11,7 @@ import { generateCode, type TargetPlatform } from "@embedflow/codegen";
 import { detectToolchain } from "./builder/detect-toolchain.js";
 import { compileCode } from "./builder/compile-service.js";
 import { flashBoard } from "./builder/flash-service.js";
+import { installToolchain } from "./builder/install-toolchain.js";
 import { SerialConnection } from "./serial/serial-service.js";
 
 const execFileAsync = promisify(execFile);
@@ -28,6 +29,22 @@ app.get("/api/health", (_req, res) => {
 
 app.get("/api/boards", (_req, res) => {
   res.json(listBoards());
+});
+
+// --- Sprint 7: Connected boards (must be BEFORE /api/boards/:id to avoid route collision) ---
+
+app.get("/api/boards/connected", async (_req, res) => {
+  try {
+    const toolchain = await detectToolchain();
+    if (!toolchain.available) { res.json([]); return; }
+    const { stdout } = await execFileAsync(toolchain.path, ["board", "list", "--format", "json"], {
+      timeout: 10000,
+    });
+    const parsed = JSON.parse(stdout) as { detected_ports?: unknown[] };
+    res.json(parsed.detected_ports ?? []);
+  } catch {
+    res.json([]);
+  }
 });
 
 app.get("/api/boards/:id", (req, res) => {
@@ -52,25 +69,25 @@ app.post("/api/workflows/validate", (req, res) => {
   res.json(result);
 });
 
-// --- Sprint 7: Toolchain ---
-
 app.get("/api/toolchain", async (_req, res) => {
   const info = await detectToolchain();
   res.json(info);
 });
 
-// --- Sprint 7: Connected boards ---
+// --- Toolchain auto-install ---
 
-app.get("/api/boards/connected", async (_req, res) => {
-  try {
-    const { stdout } = await execFileAsync("arduino-cli", ["board", "list", "--format", "json"], {
-      timeout: 10000,
-    });
-    const parsed = JSON.parse(stdout) as { detected_ports?: unknown[] };
-    res.json(parsed.detected_ports ?? []);
-  } catch {
-    res.json([]);
-  }
+app.post("/api/toolchain/install", async (_req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+    "Access-Control-Allow-Origin": "*",
+  });
+
+  const send = (data: unknown) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+  await installToolchain((progress) => send(progress));
+  res.end();
 });
 
 // --- Sprint 7: Compile ---

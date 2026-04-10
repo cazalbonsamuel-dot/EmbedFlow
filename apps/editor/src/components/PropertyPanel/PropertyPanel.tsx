@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { getActivity } from "@embedflow/activity-registry";
 import { useWorkflowStore } from "../../stores/workflow-store";
 import PropertyField from "./PropertyField";
+import WorkflowArgumentsEditor from "../WorkflowArguments/WorkflowArgumentsEditor";
 
 export default function PropertyPanel() {
   const { t } = useTranslation();
@@ -13,10 +14,15 @@ export default function PropertyPanel() {
   const [showOptions, setShowOptions] = useState(false);
   const [showExpert, setShowExpert] = useState(false);
 
+  const workflow = useWorkflowStore((s) => s.workflow);
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const activity = selectedNode ? getActivity(selectedNode.data.activityId) : null;
 
+  // Show arguments editor when no node selected and on a sub-workflow
   if (!selectedNode || !activity) {
+    if (!workflow.isMain) {
+      return <WorkflowArgumentsEditor />;
+    }
     return (
       <aside className="w-72 border-l border-gray-800 bg-gray-900/30 p-4 flex flex-col">
         <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -33,6 +39,9 @@ export default function PropertyPanel() {
     const newProps = { ...properties, [propName]: value };
     updateNodeProperties(selectedNode.id, newProps);
   };
+
+  const projectWorkflows = useWorkflowStore((s) => s.projectWorkflows);
+  const isInvokeNode = selectedNode.data.activityId === "workflow.invoke";
 
   const essentialProps = activity.properties.filter((p) => p.level === "essential");
   const optionsProps = activity.properties.filter((p) => p.level === "options");
@@ -67,11 +76,31 @@ export default function PropertyPanel() {
               {prop.label}
               {prop.required && <span className="text-red-400 ml-1">*</span>}
             </label>
-            <PropertyField
-              property={prop}
-              value={properties[prop.name]}
-              onChange={(v) => handleChange(prop.name, v)}
-            />
+
+            {/* Special dropdown for workflow.invoke target */}
+            {isInvokeNode && prop.name === "targetWorkflowId" ? (
+              <select
+                value={(properties[prop.name] as string) ?? ""}
+                onChange={(e) => handleChange(prop.name, e.target.value)}
+                className="w-full px-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
+              >
+                <option value="">-- Choisir un sous-workflow --</option>
+                {projectWorkflows
+                  .filter((w) => !w.isMain && w.id !== workflow.id)
+                  .map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+              </select>
+            ) : (
+              <PropertyField
+                property={prop}
+                value={properties[prop.name]}
+                onChange={(v) => handleChange(prop.name, v)}
+              />
+            )}
+
             {prop.helpText && (
               <p className="text-[11px] text-gray-600 mt-0.5">{prop.helpText}</p>
             )}

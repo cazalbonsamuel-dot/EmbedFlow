@@ -22,12 +22,28 @@ const servo: ActivityDefinition = {
   codegen: {
     libraries: [{ name: "Servo", version: "^1.2" }],
     includes: ["Servo.h"],
-    globals: (props) => `Servo servo_${props.pin};`,
+    globals: (props, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
+      const base = `Servo servo_${props.pin};`;
+      if (props.vitesse === "lent") {
+        return `${base}\nint servoPos_${id} = -1;\nint servoTarget_${id} = ${props.angle || 90};\nunsigned long lastServoMove_${id} = 0;`;
+      }
+      return base;
+    },
     setup: (props) => `servo_${props.pin}.attach(${props.pin});`,
-    loop: (props) => {
+    loop: (props, _inputs, _outputs, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
       const angle = props.angle as number || 90;
       if (props.vitesse === "lent") {
-        return `// Rotation lente vers ${angle} degres\nfor (int pos = servo_${props.pin}.read(); pos != ${angle}; pos += (pos < ${angle}) ? 1 : -1) {\n  servo_${props.pin}.write(pos);\n  delay(15);\n}`;
+        return [
+          `servoTarget_${id} = ${angle};`,
+          `if (servoPos_${id} == -1) servoPos_${id} = servo_${props.pin}.read();`,
+          `if (servoPos_${id} != servoTarget_${id} && millis() - lastServoMove_${id} >= 15UL) {`,
+          `  servoPos_${id} += (servoPos_${id} < servoTarget_${id}) ? 1 : -1;`,
+          `  servo_${props.pin}.write(servoPos_${id});`,
+          `  lastServoMove_${id} = millis();`,
+          `}`,
+        ].join("\n");
       }
       return `servo_${props.pin}.write(${angle});`;
     },

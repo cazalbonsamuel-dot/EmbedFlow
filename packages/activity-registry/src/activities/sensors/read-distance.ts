@@ -25,14 +25,22 @@ const readDistance: ActivityDefinition = {
   ],
   codegen: {
     libraries: [], includes: [],
-    globals: (props) => `#define TRIG_PIN ${props.pin_trigger}\n#define ECHO_PIN ${props.pin_echo}`,
-    setup: (props) => `pinMode(${props.pin_trigger}, OUTPUT);\npinMode(${props.pin_echo}, INPUT);`,
-    loop: (props) => {
+    globals: (props, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
+      return `#define TRIG_PIN_${id} ${props.pin_trigger}\n#define ECHO_PIN_${id} ${props.pin_echo}`;
+    },
+    setup: (props, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
+      return `pinMode(TRIG_PIN_${id}, OUTPUT);\npinMode(ECHO_PIN_${id}, INPUT);`;
+    },
+    loop: (props, _inputs, _outputs, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
       const maxDist = props.distance_max as number || 400;
       const timeout = Math.round(maxDist * 58);
-      let code = `digitalWrite(TRIG_PIN, LOW);\ndelayMicroseconds(2);\ndigitalWrite(TRIG_PIN, HIGH);\ndelayMicroseconds(10);\ndigitalWrite(TRIG_PIN, LOW);\nlong duree = pulseIn(ECHO_PIN, HIGH, ${timeout});\nfloat distance = duree * 0.034 / 2;`;
-      if (props.unite === "in") code += `\ndistance = distance / 2.54; // Conversion en pouces`;
-      code += `\nif (distance <= 0 || distance > ${maxDist}) {\n  distance = -1; // Hors portee\n}`;
+      // Use integer arithmetic (faster on AVR): distance_cm = duration_us / 58
+      let code = `digitalWrite(TRIG_PIN_${id}, LOW);\ndelayMicroseconds(2);\ndigitalWrite(TRIG_PIN_${id}, HIGH);\ndelayMicroseconds(10);\ndigitalWrite(TRIG_PIN_${id}, LOW);\nunsigned long duree_${id} = pulseIn(ECHO_PIN_${id}, HIGH, ${timeout}UL);\nint distance_${id} = duree_${id} / 58;`;
+      if (props.unite === "in") code += `\ndistance_${id} = distance_${id} * 100 / 254; // Conversion en pouces`;
+      code += `\nif (distance_${id} <= 0 || distance_${id} > ${maxDist}) {\n  distance_${id} = -1; // Hors portee\n}`;
       return code;
     },
   },

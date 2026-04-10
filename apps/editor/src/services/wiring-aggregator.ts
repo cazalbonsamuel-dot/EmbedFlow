@@ -11,6 +11,14 @@ export interface AggregatedConnection {
   label: string;
   blockLabel: string;
   blockIcon: string;
+  nodeId: string;
+}
+
+export interface WiringGroup {
+  nodeId: string;
+  blockLabel: string;
+  blockIcon: string;
+  connections: AggregatedConnection[];
 }
 
 export function aggregateWiring(
@@ -45,9 +53,26 @@ export function aggregateWiring(
         label: instr.label,
         blockLabel: label,
         blockIcon: icon,
+        nodeId: node.id,
       });
     }
   }
 
   return result;
+}
+
+export function groupWiring(connections: AggregatedConnection[]): WiringGroup[] {
+  const map = new Map<string, WiringGroup>();
+  for (const conn of connections) {
+    if (!map.has(conn.nodeId)) {
+      map.set(conn.nodeId, {
+        nodeId: conn.nodeId,
+        blockLabel: conn.blockLabel,
+        blockIcon: conn.blockIcon,
+        connections: [],
+      });
+    }
+    map.get(conn.nodeId)!.connections.push(conn);
+  }
+  return Array.from(map.values());
 }

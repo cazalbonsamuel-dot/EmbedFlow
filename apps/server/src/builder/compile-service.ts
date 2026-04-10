@@ -100,9 +100,15 @@ export async function compileCode(request: CompileRequest): Promise<CompileResul
   if (!toolchain.available) {
     return {
       success: false,
-      errors: [{ line: 0, column: 0, level: "error", message: "arduino-cli n'est pas installe", raw: "" }],
+      errors: [{
+        line: 0,
+        column: 0,
+        level: "error",
+        message: "arduino-cli n'est pas installe. Installez-le avec : choco install arduino-cli  puis : arduino-cli core install arduino:avr",
+        raw: "",
+      }],
       warnings: [],
-      rawOutput: "",
+      rawOutput: "arduino-cli introuvable dans le PATH.",
       duration: 0,
     };
   }
@@ -132,7 +138,7 @@ export async function compileCode(request: CompileRequest): Promise<CompileResul
     let rawOutput = "";
     try {
       const { stdout, stderr } = await execFileAsync(
-        "arduino-cli",
+        toolchain.path,
         [
           "compile",
           "--fqbn", board.fqbn,

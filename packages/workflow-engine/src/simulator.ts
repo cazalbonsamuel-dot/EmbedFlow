@@ -70,14 +70,23 @@ export class WorkflowSimulator {
     outputs: { id: string; type: string }[];
   } | undefined;
 
+  // Sub-workflow support
+  private getSubWorkflow: ((id: string) => Workflow | undefined) | undefined;
+  private callDepth: number;
+  private static readonly MAX_CALL_DEPTH = 10;
+
   constructor(
     workflow: Workflow,
     getInputs: () => SimulationInputs,
     getActivity: (id: string) => { id: string; simulate: { defaultValue: unknown }; outputs: { id: string; type: string }[] } | undefined,
+    getSubWorkflow?: (id: string) => Workflow | undefined,
+    callDepth = 0,
   ) {
     this.workflow = workflow;
     this.getInputs = getInputs;
     this.getActivity = getActivity;
+    this.getSubWorkflow = getSubWorkflow;
+    this.callDepth = callDepth;
 
     this.state = this.createInitialState();
     this.buildGraph();
@@ -575,9 +584,16 @@ export class WorkflowSimulator {
 
     if (activityId === "timing.interval") {
       const intervalle = (props.intervalle as number) || 1000;
-      const lastRun = this.intervalLastRun.get(node.id) || 0;
-      if (this.state.simulatedTimeMs - lastRun >= intervalle) {
-        this.intervalLastRun.set(node.id, this.state.simulatedTimeMs);
+      const unite = (props.unite as string) || "ms";
+      let intervalMs = intervalle;
+      if (unite === "sec") intervalMs = intervalle * 1000;
+      if (unite === "min") intervalMs = intervalle * 60000;
+
+      const now = Date.now();
+      const lastRun = this.intervalLastRun.get(node.id);
+      // Fire immediately on first call, then respect the interval adjusted by speed
+      if (lastRun === undefined || (now - lastRun) >= intervalMs / this.state.speedMultiplier) {
+        this.intervalLastRun.set(node.id, now);
         return "exec_body";
       }
       return null; // Skip this cycle
@@ -644,6 +660,71 @@ export class WorkflowSimulator {
       const mapped = versMin + ((val - deMin) / (deMax - deMin)) * (versMax - versMin);
       this.state.variables.set("valeur", mapped);
       this.emit({ type: "variable-change", nodeId: node.id, data: { name: "valeur", value: mapped } });
+      return "exec_out";
+    }
+
+    // --- Sub-workflow invocation ---
+    if (activityId === "workflow.invoke") {
+      const targetId = props.targetWorkflowId as string;
+      if (!targetId || !this.getSubWorkflow) return "exec_out";
+
+      if (this.callDepth >= WorkflowSimulator.MAX_CALL_DEPTH) {
+        throw new Error(`Profondeur d'appel max atteinte (${WorkflowSimulator.MAX_CALL_DEPTH}). Verifiez qu'il n'y a pas de recursion infinie.`);
+      }
+
+      const subWorkflow = this.getSubWorkflow(targetId);
+      if (!subWorkflow) {
+        throw new Error(`Sous-workflow introuvable : ${targetId}`);
+      }
+
+      // Create child simulator with isolated scope
+      const childSim = new WorkflowSimulator(
+        subWorkflow,
+        this.getInputs,
+        this.getActivity,
+        this.getSubWorkflow,
+        this.callDepth + 1,
+      );
+
+      // Copy "in" arguments from parent variables to child
+      for (const arg of subWorkflow.arguments || []) {
+        if (arg.direction === "in" || arg.direction === "in_out") {
+          const parentVal = this.state.variables.get(arg.name);
+          if (parentVal !== undefined) {
+            childSim.state.variables.set(arg.name, parentVal);
+          } else if (arg.defaultValue !== undefined) {
+            childSim.state.variables.set(arg.name, arg.defaultValue);
+          }
+        }
+      }
+
+      // Execute child synchronously (step through all nodes)
+      const roots = childSim.findRoots();
+      for (const rootId of roots) {
+        childSim.stepOneNode(rootId);
+        while (childSim.stepQueue.length > 0) {
+          const nextId = childSim.stepQueue.shift()!;
+          childSim.stepOneNode(nextId);
+        }
+      }
+
+      // Copy "out" arguments back to parent
+      for (const arg of subWorkflow.arguments || []) {
+        if (arg.direction === "out" || arg.direction === "in_out") {
+          const childVal = childSim.state.variables.get(arg.name);
+          if (childVal !== undefined) {
+            this.state.variables.set(arg.name, childVal);
+            this.emit({ type: "variable-change", nodeId: node.id, data: { name: arg.name, value: childVal } });
+          }
+        }
+      }
+
+      // Propagate serial output, LED states, etc.
+      for (const line of childSim.state.serialOutput) {
+        this.state.serialOutput.push(line);
+        this.emit({ type: "serial", nodeId: node.id, data: line });
+      }
+
       return "exec_out";
     }
 

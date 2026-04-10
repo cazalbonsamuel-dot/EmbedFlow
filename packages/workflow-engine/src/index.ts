@@ -16,6 +16,8 @@ export type {
 
 export { WorkflowSimulator } from "./simulator.js";
 
+export type { Project } from "./project.js";
+
 // --- Types ---
 
 export interface WorkflowPort {
@@ -39,6 +41,14 @@ export interface WorkflowEdge {
   targetPortId: string;
 }
 
+export interface WorkflowArgument {
+  id: string;
+  name: string;
+  type: "number" | "boolean" | "string";
+  direction: "in" | "out" | "in_out";
+  defaultValue?: unknown;
+}
+
 export interface Workflow {
   id: string;
   name: string;
@@ -46,6 +56,8 @@ export interface Workflow {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
   variables: WorkflowVariable[];
+  arguments: WorkflowArgument[];
+  isMain: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -72,7 +84,7 @@ export interface ValidationResult {
 
 // --- Functions ---
 
-export function createWorkflow(name: string, boardId: string): Workflow {
+export function createWorkflow(name: string, boardId: string, isMain = true): Workflow {
   return {
     id: crypto.randomUUID(),
     name,
@@ -80,6 +92,8 @@ export function createWorkflow(name: string, boardId: string): Workflow {
     nodes: [],
     edges: [],
     variables: [],
+    arguments: [],
+    isMain,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -98,10 +112,16 @@ export function validateWorkflow(workflow: Workflow): ValidationResult {
   }
 
   // 2. Pin conflict detection
+  // Activities that can share the same pin without electrical conflict
+  const COMPATIBLE_PAIRS: Record<string, string[]> = {
+    "gpio.turn_on": ["gpio.turn_off", "gpio.vary_intensity"],
+    "gpio.turn_off": ["gpio.turn_on", "gpio.vary_intensity"],
+    "gpio.vary_intensity": ["gpio.turn_on", "gpio.turn_off"],
+  };
+
   const pinUsage = new Map<number, { nodeId: string; activityId: string }[]>();
   for (const node of workflow.nodes) {
     const props = node.properties;
-    // Collect all pin-type properties
     const pinProps = ["pin", "pin_trigger", "pin_echo", "pin_vitesse", "pin_direction"];
     for (const propName of pinProps) {
       const pinVal = props[propName];
@@ -114,13 +134,21 @@ export function validateWorkflow(workflow: Workflow): ValidationResult {
 
   for (const [pin, users] of pinUsage) {
     if (users.length > 1) {
-      const names = users.map((u) => u.activityId).join(", ");
-      for (const user of users) {
-        messages.push({
-          nodeId: user.nodeId,
-          level: "error",
-          message: `Le pin ${pin} est utilise par plusieurs blocs : ${names}`,
-        });
+      // Check if all users are mutually compatible (can share the pin)
+      const allCompatible = users.every((user) =>
+        users
+          .filter((other) => other.nodeId !== user.nodeId)
+          .every((other) => (COMPATIBLE_PAIRS[user.activityId] ?? []).includes(other.activityId)),
+      );
+      if (!allCompatible) {
+        const names = users.map((u) => u.activityId).join(", ");
+        for (const user of users) {
+          messages.push({
+            nodeId: user.nodeId,
+            level: "error",
+            message: `Le pin ${pin} est utilise par plusieurs blocs : ${names}`,
+          });
+        }
       }
     }
   }
@@ -194,5 +222,84 @@ export function validateWorkflow(workflow: Workflow): ValidationResult {
     messages,
     estimatedRam,
     estimatedFlash,
+  };
+}
+
+// --- Project-level validation (multi-workflow) ---
+
+export function validateProject(workflows: Workflow[]): ValidationResult {
+  const messages: ValidationMessage[] = [];
+
+  // Exactly one Main workflow
+  const mains = workflows.filter((w) => w.isMain);
+  if (mains.length === 0) {
+    messages.push({ level: "error", message: "Le projet doit contenir un workflow principal (Main)." });
+  } else if (mains.length > 1) {
+    messages.push({ level: "error", message: "Le projet ne peut avoir qu'un seul workflow principal (Main)." });
+  }
+
+  // Check for cycle in invocations (A calls B, B calls A)
+  const invocationGraph = new Map<string, string[]>();
+  for (const wf of workflows) {
+    invocationGraph.set(wf.id, []);
+    for (const node of wf.nodes) {
+      if (node.activityId === "workflow.invoke") {
+        const targetId = node.properties.targetWorkflowId as string | undefined;
+        if (targetId) {
+          invocationGraph.get(wf.id)!.push(targetId);
+        }
+      }
+    }
+  }
+
+  // DFS cycle detection on invocation graph
+  const visited = new Set<string>();
+  const inStack = new Set<string>();
+  let hasCycle = false;
+
+  function dfs(id: string) {
+    visited.add(id);
+    inStack.add(id);
+    for (const target of invocationGraph.get(id) || []) {
+      if (!visited.has(target)) {
+        dfs(target);
+      } else if (inStack.has(target)) {
+        hasCycle = true;
+      }
+    }
+    inStack.delete(id);
+  }
+
+  for (const wf of workflows) {
+    if (!visited.has(wf.id)) dfs(wf.id);
+  }
+
+  if (hasCycle) {
+    messages.push({
+      level: "error",
+      message: "Cycle d'invocation detecte : des sous-workflows s'appellent mutuellement.",
+    });
+  }
+
+  // Check referenced sub-workflows exist
+  const workflowIds = new Set(workflows.map((w) => w.id));
+  for (const wf of workflows) {
+    for (const node of wf.nodes) {
+      if (node.activityId === "workflow.invoke") {
+        const targetId = node.properties.targetWorkflowId as string | undefined;
+        if (targetId && !workflowIds.has(targetId)) {
+          messages.push({
+            nodeId: node.id,
+            level: "error",
+            message: `Le sous-workflow reference n'existe plus.`,
+          });
+        }
+      }
+    }
+  }
+
+  return {
+    valid: messages.every((m) => m.level !== "error"),
+    messages,
   };
 }

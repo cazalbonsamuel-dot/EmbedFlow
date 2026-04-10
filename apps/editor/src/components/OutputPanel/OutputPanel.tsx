@@ -17,6 +17,10 @@ export default function OutputPanel() {
   const binarySize = useCompileStore((s) => s.binarySize);
   const duration = useCompileStore((s) => s.duration);
   const generatedCode = useCompileStore((s) => s.generatedCode);
+  const toolchainMissing = useCompileStore((s) => s.toolchainMissing);
+  const installStatus = useCompileStore((s) => s.installStatus);
+  const installProgress = useCompileStore((s) => s.installProgress);
+  const install = useCompileStore((s) => s.install);
 
   const serialStatus = useSerialStore((s) => s.status);
 
@@ -123,7 +127,62 @@ export default function OutputPanel() {
           {/* Compilation tab */}
           {activeTab === "compilation" && (
             <div className="h-full overflow-y-auto px-4 py-2 space-y-2">
-              {compileStatus === "idle" && (
+              {/* Toolchain install wizard */}
+              {(toolchainMissing || installStatus === "installing" || installStatus === "success") && (
+                <div className="rounded-lg border border-yellow-800/60 bg-yellow-950/20 p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-yellow-300 font-medium">
+                    <span>🔧</span>
+                    <span>arduino-cli requis pour compiler</span>
+                  </div>
+
+                  {installStatus === "idle" && (
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] text-gray-400">
+                        L'outil de compilation Arduino n'est pas installé. EmbedFlow peut l'installer automatiquement.
+                      </p>
+                      <button
+                        onClick={install}
+                        className="px-3 py-1.5 text-xs rounded-md bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
+                      >
+                        ⬇ Installer arduino-cli automatiquement
+                      </button>
+                    </div>
+                  )}
+
+                  {installStatus === "installing" && installProgress && (
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] text-gray-300">{installProgress.message}</p>
+                      <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-blue-500 transition-all duration-300"
+                          style={{ width: `${installProgress.percent}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-gray-500 tabular-nums">{installProgress.percent}%</p>
+                    </div>
+                  )}
+
+                  {installStatus === "success" && (
+                    <p className="text-[11px] text-green-400 flex items-center gap-1.5">
+                      <span>✅</span> Installation terminée — vous pouvez maintenant compiler !
+                    </p>
+                  )}
+
+                  {installStatus === "error" && installProgress && (
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] text-red-400">{installProgress.message}</p>
+                      <button
+                        onClick={install}
+                        className="px-3 py-1.5 text-xs rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+                      >
+                        Réessayer
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {compileStatus === "idle" && !toolchainMissing && (
                 <p className="text-xs text-gray-500 py-2">
                   Cliquez sur "Compiler" pour compiler le code généré.
                 </p>
@@ -150,12 +209,14 @@ export default function OutputPanel() {
                   </div>
 
                   {compileErrors.map((err, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs">
-                      <span className="text-red-400 shrink-0">Ligne {err.line}:</span>
-                      <span className="text-red-300">{err.message}</span>
-                      {err.blockLabel && (
-                        <span className="text-gray-600 shrink-0">({err.blockLabel})</span>
-                      )}
+                    <div key={i} className="flex flex-col gap-1 text-xs">
+                      <div className="flex items-start gap-2">
+                        {err.line > 0 && <span className="text-red-400 shrink-0">Ligne {err.line}:</span>}
+                        <span className="text-red-300 whitespace-pre-wrap">{err.message}</span>
+                        {err.blockLabel && (
+                          <span className="text-gray-600 shrink-0">({err.blockLabel})</span>
+                        )}
+                      </div>
                     </div>
                   ))}
 

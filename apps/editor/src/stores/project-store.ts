@@ -27,11 +27,14 @@ export const useProjectStore = create<ProjectState>()(
       currentProjectId: null,
 
       syncCurrentProject: () => {
-        const { workflow, nodes, edges, boardId } = useWorkflowStore.getState();
+        const { workflow, nodes, edges, boardId, projectWorkflows, allWorkflowData, activeWorkflowId } = useWorkflowStore.getState();
         const projectId = workflow.id;
 
-        // Save full project data to its own localStorage slot
-        const projectData = JSON.stringify({ workflow, nodes, edges, boardId });
+        // Save full project data including sub-workflows
+        const projectData = JSON.stringify({
+          workflow, nodes, edges, boardId,
+          projectWorkflows, allWorkflowData, activeWorkflowId,
+        });
         localStorage.setItem(`embedflow-project-${projectId}`, projectData);
 
         // Update metadata in projects list
@@ -86,6 +89,16 @@ export const useProjectStore = create<ProjectState>()(
         try {
           const data = JSON.parse(raw);
           useWorkflowStore.getState().loadWorkflow(data.workflow, data.nodes, data.edges);
+
+          // Restore multi-workflow state if available
+          if (data.projectWorkflows) {
+            useWorkflowStore.setState({
+              projectWorkflows: data.projectWorkflows,
+              allWorkflowData: data.allWorkflowData || {},
+              activeWorkflowId: data.activeWorkflowId || data.workflow.id,
+            });
+          }
+
           set({ currentProjectId: id });
         } catch {
           console.error("Failed to load project", id);

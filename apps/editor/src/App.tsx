@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ReactFlowProvider } from "@xyflow/react";
 import { listBoards } from "@embedflow/hardware-db";
 import WorkflowCanvas from "./components/Canvas/WorkflowCanvas";
-import ActivityPanel from "./components/ActivityPanel/ActivityPanel";
+import LeftPanel from "./components/LeftPanel/LeftPanel";
 import PropertyPanel from "./components/PropertyPanel/PropertyPanel";
 import CodePanel from "./components/CodePanel/CodePanel";
 import OutputPanel from "./components/OutputPanel/OutputPanel";
@@ -13,6 +13,7 @@ import FlashDialog from "./components/FlashDialog/FlashDialog";
 import ProjectSelector from "./components/ProjectSelector/ProjectSelector";
 import ShortcutDialog from "./components/ShortcutDialog/ShortcutDialog";
 import TemplateDialog from "./components/TemplateDialog/TemplateDialog";
+import WorkflowTabs from "./components/WorkflowTabs/WorkflowTabs";
 import StatusBar from "./components/StatusBar/StatusBar";
 import { useWorkflowStore } from "./stores/workflow-store";
 import { useSimulationStore } from "./stores/simulation-store";
@@ -100,7 +101,32 @@ function App() {
 
     try {
       const data = await importWorkflow(file);
-      useWorkflowStore.getState().loadWorkflow(data.workflow, data.nodes, data.edges);
+      const store = useWorkflowStore.getState();
+
+      // Load main workflow
+      store.loadWorkflow(data.workflow, data.nodes, data.edges);
+
+      // If V2 multi-workflow import, restore sub-workflows
+      if (data.allWorkflows && data.allWorkflows.length > 1) {
+        const projectWorkflows = data.allWorkflows.map((entry) => ({
+          id: entry.workflow.id,
+          name: entry.workflow.name,
+          isMain: entry.workflow.isMain,
+        }));
+
+        const allWorkflowData: Record<string, { workflow: typeof data.workflow; nodes: typeof data.nodes; edges: typeof data.edges }> = {};
+        for (const entry of data.allWorkflows) {
+          if (entry.workflow.id !== data.workflow.id) {
+            allWorkflowData[entry.workflow.id] = entry;
+          }
+        }
+
+        useWorkflowStore.setState({
+          projectWorkflows,
+          allWorkflowData,
+        });
+      }
+
       syncCurrentProject();
       setImportToast({ type: "success", message: "Workflow importé avec succès !" });
     } catch (err) {
@@ -329,9 +355,12 @@ function App() {
           </div>
         )}
 
+        {/* Workflow tabs */}
+        <WorkflowTabs />
+
         {/* Main content */}
         <div className="flex flex-1 min-h-0">
-          <ActivityPanel />
+          <LeftPanel />
           <div className="flex-1 flex flex-col min-h-0">
             <WorkflowCanvas />
             <OutputPanel />

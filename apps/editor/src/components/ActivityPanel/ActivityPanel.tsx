@@ -13,6 +13,7 @@ const categoryIcons: Record<string, string> = {
   Temps: "⏱️",
   Communication: "📡",
   Variables: "🧮",
+  "Sous-programmes": "📎",
 };
 
 function ActivityItem({ activity, disabled }: { activity: ActivityDefinition; disabled: boolean }) {
@@ -38,7 +39,7 @@ function ActivityItem({ activity, disabled }: { activity: ActivityDefinition; di
   );
 }
 
-export default function ActivityPanel() {
+export default function ActivityPanel({ embedded }: { embedded?: boolean } = {}) {
   const { t } = useTranslation();
   const boardId = useWorkflowStore((s) => s.boardId);
   const [search, setSearch] = useState("");
@@ -55,8 +56,8 @@ export default function ActivityPanel() {
     });
   };
 
-  return (
-    <aside className="w-60 border-r border-gray-800 bg-gray-900/30 flex flex-col h-full">
+  const content = (
+    <>
       {/* Search */}
       <div className="p-3 border-b border-gray-800">
         <input
@@ -104,6 +105,16 @@ export default function ActivityPanel() {
           );
         })}
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="flex flex-col h-full">{content}</div>;
+  }
+
+  return (
+    <aside className="w-60 border-r border-gray-800 bg-gray-900/30 flex flex-col h-full">
+      {content}
     </aside>
   );
 }

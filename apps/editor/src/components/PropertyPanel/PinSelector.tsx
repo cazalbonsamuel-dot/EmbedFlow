@@ -25,10 +25,24 @@ export default function PinSelector({ value, onChange, filterRule }: PinSelector
   const board = getBoard(boardId);
   if (!board) return <div className="text-xs text-gray-500">Carte non trouvee</div>;
 
-  // Collect all pins currently used by other nodes
+  const selectedNodeId = useWorkflowStore((s) => s.selectedNodeId);
+  const selectedNode = useWorkflowStore((s) => s.nodes.find((n) => n.id === s.selectedNodeId));
+
+  // Activities that can share a pin with each other (e.g. turn_on + turn_off control the same LED)
+  const COMPATIBLE_PAIRS: Record<string, string[]> = {
+    "gpio.turn_on": ["gpio.turn_off"],
+    "gpio.turn_off": ["gpio.turn_on"],
+  };
+
+  // Collect all pins currently used by other nodes (excluding current node and compatible activity pairs)
   const usedPins = useMemo(() => {
     const map = new Map<number, string>();
+    const currentActivityId = selectedNode?.data.activityId;
+    const compatibleActivities = currentActivityId ? (COMPATIBLE_PAIRS[currentActivityId] ?? []) : [];
+
     for (const node of nodes) {
+      if (node.id === selectedNodeId) continue;
+      if (compatibleActivities.includes(node.data.activityId)) continue;
       const props = node.data.properties;
       const pinProps = ["pin", "pin_trigger", "pin_echo", "pin_vitesse", "pin_direction"];
       for (const propName of pinProps) {
@@ -39,7 +53,7 @@ export default function PinSelector({ value, onChange, filterRule }: PinSelector
       }
     }
     return map;
-  }, [nodes]);
+  }, [nodes, selectedNodeId, selectedNode]);
 
   // Filter pins by type if validation rule provided
   const isCompatible = (pin: PinDefinition): boolean => {

@@ -81,8 +81,14 @@ export const useSimulationStore = create<SimulationStoreState>((set, get) => ({
   },
 
   startSimulation: () => {
-    const workflow = useWorkflowStore.getState().workflow;
+    const workflowStore = useWorkflowStore.getState();
+    const workflow = workflowStore.workflow;
     const store = get();
+
+    const getSubWorkflow = (id: string) => {
+      const data = useWorkflowStore.getState().allWorkflowData[id];
+      return data?.workflow;
+    };
 
     simulator = new WorkflowSimulator(
       workflow,
@@ -94,6 +100,7 @@ export const useSimulationStore = create<SimulationStoreState>((set, get) => ({
         if (!act) return undefined;
         return { id: act.id, simulate: act.simulate, outputs: act.outputs };
       },
+      getSubWorkflow,
     );
 
     simulator.setSpeed(store.speedMultiplier);
@@ -116,6 +123,12 @@ export const useSimulationStore = create<SimulationStoreState>((set, get) => ({
     if (!simulator) {
       // Create simulator for first step
       const workflow = useWorkflowStore.getState().workflow;
+
+      const getSubWorkflow = (id: string) => {
+        const data = useWorkflowStore.getState().allWorkflowData[id];
+        return data?.workflow;
+      };
+
       simulator = new WorkflowSimulator(
         workflow,
         () => ({
@@ -126,6 +139,7 @@ export const useSimulationStore = create<SimulationStoreState>((set, get) => ({
           if (!act) return undefined;
           return { id: act.id, simulate: act.simulate, outputs: act.outputs };
         },
+        getSubWorkflow,
       );
       simulator.addEventListener((event: SimulationEvent) => {
         handleSimulationEvent(event);

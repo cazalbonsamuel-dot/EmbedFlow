@@ -23,14 +23,27 @@ const varyIntensity: ActivityDefinition = {
   outputs: [{ id: "exec_out", name: "Sortie", type: "execution" }],
   codegen: {
     libraries: [], includes: [],
-    globals: () => "",
+    globals: (props, ctx) => {
+      if (!props.progressif) return "";
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
+      return `int fadeVal_${id} = 0;\nunsigned long lastFade_${id} = 0;`;
+    },
     setup: (props) => `pinMode(${props.pin}, OUTPUT);`,
-    loop: (props) => {
+    loop: (props, _inputs, _outputs, ctx) => {
       const pin = props.pin as number;
       const intensite = props.intensite as number || 50;
       const pwmVal = Math.round((intensite / 100) * 255);
       if (props.progressif) {
-        return `// Fondu progressif vers ${intensite}%\nfor (int i = 0; i <= ${pwmVal}; i++) {\n  analogWrite(${pin}, i);\n  delay(${Math.round((props.duree_fade as number || 1000) / 255)});\n}`;
+        const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
+        const stepDelay = Math.max(1, Math.round((props.duree_fade as number || 1000) / 255));
+        return [
+          `// Fondu non-bloquant vers ${intensite}%`,
+          `if (fadeVal_${id} != ${pwmVal} && millis() - lastFade_${id} >= ${stepDelay}UL) {`,
+          `  fadeVal_${id} += (fadeVal_${id} < ${pwmVal}) ? 1 : -1;`,
+          `  analogWrite(${pin}, fadeVal_${id});`,
+          `  lastFade_${id} = millis();`,
+          `}`,
+        ].join("\n");
       }
       return `analogWrite(${pin}, ${pwmVal}); // ${intensite}%`;
     },

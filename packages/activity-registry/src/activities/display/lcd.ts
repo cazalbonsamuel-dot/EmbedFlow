@@ -23,14 +23,28 @@ const lcd: ActivityDefinition = {
   codegen: {
     libraries: [{ name: "LiquidCrystal I2C", version: "^1.1" }],
     includes: ["LiquidCrystal_I2C.h"],
-    globals: (props) => `LiquidCrystal_I2C lcd(0x${(props.adresse as number || 39).toString(16)}, 16, 2);`,
-    setup: () => `lcd.init();\nlcd.backlight();`,
-    loop: (props) => {
+    globals: (props, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
+      const addr = `0x${(props.adresse as number || 39).toString(16)}`;
+      return `LiquidCrystal_I2C lcd_${id}(${addr}, 16, 2);\nchar lastLcd_${id}[17] = "";`;
+    },
+    setup: (_props, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
+      return `lcd_${id}.init();\nlcd_${id}.backlight();`;
+    },
+    loop: (props, _inputs, _outputs, ctx) => {
+      const id = ctx?.nodeId?.replace(/-/g, "").slice(0, 8) ?? "0";
       const ligne = props.ligne as string || "0";
-      let code = "";
-      if (props.effacer !== false) code += "lcd.clear();\n";
-      code += `lcd.setCursor(0, ${ligne});\nlcd.print("${props.texte || ""}");`;
-      return code;
+      const texte = (props.texte as string || "").replace(/"/g, '\\"');
+      // Anti-flicker: only update display when text actually changes
+      return [
+        `if (strcmp(lastLcd_${id}, "${texte}") != 0) {`,
+        `  strncpy(lastLcd_${id}, "${texte}", 16);`,
+        `  lcd_${id}.setCursor(0, ${ligne});`,
+        props.effacer !== false ? `  lcd_${id}.clear();` : null,
+        `  lcd_${id}.print("${texte}");`,
+        `}`,
+      ].filter(Boolean).join("\n");
     },
   },
   validate: (props) => {
