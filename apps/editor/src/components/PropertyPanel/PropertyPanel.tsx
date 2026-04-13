@@ -15,6 +15,7 @@ export default function PropertyPanel() {
   const [showExpert, setShowExpert] = useState(false);
 
   const workflow = useWorkflowStore((s) => s.workflow);
+  const projectWorkflows = useWorkflowStore((s) => s.projectWorkflows);
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const activity = selectedNode ? getActivity(selectedNode.data.activityId) : null;
 
@@ -61,7 +62,6 @@ export default function PropertyPanel() {
     updateNodeProperties(selectedNode.id, newProps);
   };
 
-  const projectWorkflows = useWorkflowStore((s) => s.projectWorkflows);
   const isInvokeNode = selectedNode.data.activityId === "workflow.invoke";
 
   const essentialProps = activity.properties.filter((p) => p.level === "essential");
