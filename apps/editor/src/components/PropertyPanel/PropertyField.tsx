@@ -8,10 +8,20 @@ interface PropertyFieldProps {
   onChange: (value: unknown) => void;
 }
 
-export default function PropertyField({ property, value, onChange }: PropertyFieldProps) {
+const inputStyle = {
+  background: "var(--color-surface)",
+  border: "1px solid var(--border-default)",
+  color: "var(--text-primary)",
+  width: "100%",
+  padding: "5px 10px",
+  borderRadius: "4px",
+  fontSize: "12px",
+  height: "28px",
+  outline: "none",
+  transition: "border-color 100ms",
+} as const;
 
-  const baseInputClass =
-    "w-full px-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500";
+export default function PropertyField({ property, value, onChange }: PropertyFieldProps) {
 
   switch (property.type) {
     case "choice":
@@ -19,9 +29,11 @@ export default function PropertyField({ property, value, onChange }: PropertyFie
         <select
           value={(value as string) ?? property.default ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          className={baseInputClass}
+          style={inputStyle}
+          onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
+          onBlur={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
         >
-          <option value="">-- Choisir --</option>
+          <option value="">— Choisir —</option>
           {property.options?.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.icon ? `${opt.icon} ` : ""}{opt.label}
@@ -45,7 +57,9 @@ export default function PropertyField({ property, value, onChange }: PropertyFie
           type="number"
           value={(value as number) ?? property.default ?? 0}
           onChange={(e) => onChange(Number(e.target.value))}
-          className={baseInputClass}
+          style={inputStyle}
+          onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
+          onBlur={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
         />
       );
 
@@ -59,16 +73,22 @@ export default function PropertyField({ property, value, onChange }: PropertyFie
       const val = (value as number) ?? (property.default as number) ?? min;
 
       return (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <input
             type="range"
             min={min}
             max={max}
             value={val}
             onChange={(e) => onChange(Number(e.target.value))}
-            className="flex-1 accent-blue-500"
+            className="flex-1"
+            style={{ accentColor: "var(--accent)", height: "4px" }}
           />
-          <span className="text-sm text-gray-400 w-10 text-right">{val}</span>
+          <span
+            className="text-xs font-mono w-8 text-right shrink-0"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            {val}
+          </span>
         </div>
       );
     }
@@ -77,14 +97,20 @@ export default function PropertyField({ property, value, onChange }: PropertyFie
       return (
         <button
           onClick={() => onChange(!value)}
-          className={`relative w-10 h-5 rounded-full transition-colors ${
-            value ? "bg-blue-500" : "bg-gray-600"
-          }`}
+          className="relative rounded-full transition-colors duration-100"
+          style={{
+            width: "32px",
+            height: "16px",
+            background: value ? "var(--accent)" : "var(--color-subtle)",
+          }}
         >
           <span
-            className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-              value ? "left-5" : "left-0.5"
-            }`}
+            className="absolute top-0.5 rounded-full bg-white transition-all duration-100"
+            style={{
+              width: "12px",
+              height: "12px",
+              left: value ? "17px" : "2px",
+            }}
           />
         </button>
       );
@@ -95,8 +121,10 @@ export default function PropertyField({ property, value, onChange }: PropertyFie
           type="text"
           value={(value as string) ?? property.default ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          className={baseInputClass}
+          style={inputStyle}
           placeholder={property.helpText}
+          onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
+          onBlur={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
         />
       );
 
@@ -106,9 +134,11 @@ export default function PropertyField({ property, value, onChange }: PropertyFie
         <select
           value={(value as string) ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          className={baseInputClass}
+          style={inputStyle}
+          onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
+          onBlur={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
         >
-          <option value="">-- Variable --</option>
+          <option value="">— Variable —</option>
           {workflow.variables.map((v) => (
             <option key={v.id} value={v.name}>
               {v.name} ({v.type})
@@ -124,7 +154,9 @@ export default function PropertyField({ property, value, onChange }: PropertyFie
           type="text"
           value={String(value ?? "")}
           onChange={(e) => onChange(e.target.value)}
-          className={baseInputClass}
+          style={inputStyle}
+          onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
+          onBlur={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
         />
       );
   }

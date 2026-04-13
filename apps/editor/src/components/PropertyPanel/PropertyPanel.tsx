@@ -18,17 +18,38 @@ export default function PropertyPanel() {
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
   const activity = selectedNode ? getActivity(selectedNode.data.activityId) : null;
 
-  // Show arguments editor when no node selected and on a sub-workflow
   if (!selectedNode || !activity) {
     if (!workflow.isMain) {
       return <WorkflowArgumentsEditor />;
     }
     return (
-      <aside className="w-72 border-l border-gray-800 bg-gray-900/30 p-4 flex flex-col">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          {t("nav.settings")}
-        </h2>
-        <p className="text-sm text-gray-600 mt-4">{t("properties.selectBlock")}</p>
+      <aside
+        className="flex flex-col h-full shrink-0"
+        style={{
+          width: "272px",
+          borderLeft: "1px solid var(--border-dim)",
+          background: "var(--color-raised)",
+        }}
+      >
+        <div
+          className="px-3 py-2 shrink-0"
+          style={{ borderBottom: "1px solid var(--border-dim)", height: "36px", display: "flex", alignItems: "center" }}
+        >
+          <span
+            className="text-[10px] font-semibold uppercase tracking-widest"
+            style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
+          >
+            {t("nav.settings")}
+          </span>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <p
+            className="text-xs text-center px-4"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            {t("properties.selectBlock")}
+          </p>
+        </div>
       </aside>
     );
   }
@@ -47,50 +68,81 @@ export default function PropertyPanel() {
   const optionsProps = activity.properties.filter((p) => p.level === "options");
   const expertProps = activity.properties.filter((p) => p.level === "expert");
 
-  // Validate
   const validationResult = activity.validate(properties, {
     usedPins: new Set<number>(),
     boardId: useWorkflowStore.getState().boardId,
   });
 
   return (
-    <aside className="w-72 border-l border-gray-800 bg-gray-900/30 flex flex-col h-full">
-      {/* Activity header */}
+    <aside
+      className="flex flex-col h-full shrink-0"
+      style={{
+        width: "272px",
+        borderLeft: "1px solid var(--border-dim)",
+        background: "var(--color-raised)",
+      }}
+    >
+      {/* Activity header with left accent */}
       <div
-        className="flex items-center gap-3 px-4 py-3 text-white"
-        style={{ backgroundColor: activity.color }}
+        className="flex items-center gap-2.5 px-3 py-2.5 shrink-0 relative overflow-hidden"
+        style={{
+          borderBottom: "1px solid var(--border-dim)",
+          background: "var(--color-surface)",
+        }}
       >
-        <span className="text-xl">{activity.icon}</span>
+        {/* Color strip */}
+        <div
+          className="absolute left-0 top-0 bottom-0"
+          style={{ width: "3px", background: activity.color }}
+        />
+        <span className="text-lg leading-none shrink-0 ml-1">{activity.icon}</span>
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm truncate">{activity.label}</div>
-          <div className="text-xs opacity-75 truncate">{activity.description}</div>
+          <div
+            className="text-xs font-semibold truncate"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {activity.label}
+          </div>
+          <div
+            className="text-[10px] truncate"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            {activity.description}
+          </div>
         </div>
       </div>
 
       {/* Properties */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Essential */}
         {essentialProps.map((prop) => (
           <div key={prop.name}>
-            <label className="block text-xs font-medium text-gray-400 mb-1">
+            <label
+              className="block text-[10px] font-medium mb-1 uppercase tracking-wider"
+              style={{ color: "var(--text-tertiary)", letterSpacing: "0.06em" }}
+            >
               {prop.label}
-              {prop.required && <span className="text-red-400 ml-1">*</span>}
+              {prop.required && <span style={{ color: "var(--error)" }} className="ml-1">*</span>}
             </label>
 
-            {/* Special dropdown for workflow.invoke target */}
             {isInvokeNode && prop.name === "targetWorkflowId" ? (
               <select
                 value={(properties[prop.name] as string) ?? ""}
                 onChange={(e) => handleChange(prop.name, e.target.value)}
-                className="w-full px-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded-md text-gray-200 focus:outline-none focus:border-blue-500"
+                className="w-full px-2.5 py-1.5 text-xs rounded focus:outline-none"
+                style={{
+                  background: "var(--color-surface)",
+                  border: "1px solid var(--border-default)",
+                  color: "var(--text-primary)",
+                }}
+                onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
+                onBlur={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
               >
-                <option value="">-- Choisir un sous-workflow --</option>
+                <option value="">— Choisir un sous-workflow —</option>
                 {projectWorkflows
                   .filter((w) => !w.isMain && w.id !== workflow.id)
                   .map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.name}
-                    </option>
+                    <option key={w.id} value={w.id}>{w.name}</option>
                   ))}
               </select>
             ) : (
@@ -102,26 +154,34 @@ export default function PropertyPanel() {
             )}
 
             {prop.helpText && (
-              <p className="text-[11px] text-gray-600 mt-0.5">{prop.helpText}</p>
+              <p className="text-[10px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
+                {prop.helpText}
+              </p>
             )}
           </div>
         ))}
 
         {/* Options */}
         {optionsProps.length > 0 && (
-          <div className="border-t border-gray-800 pt-3">
+          <div style={{ borderTop: "1px solid var(--border-dim)", paddingTop: "12px" }}>
             <button
               onClick={() => setShowOptions(!showOptions)}
-              className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-400 w-full"
+              className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider w-full transition-colors duration-100"
+              style={{ color: "var(--text-tertiary)", letterSpacing: "0.06em" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
             >
-              <span>{showOptions ? "▼" : "▶"}</span>
+              <span className="text-[8px]">{showOptions ? "▼" : "▶"}</span>
               <span>{t("properties.options")}</span>
             </button>
             {showOptions && (
-              <div className="mt-3 space-y-4">
+              <div className="mt-3 space-y-3">
                 {optionsProps.map((prop) => (
                   <div key={prop.name}>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">
+                    <label
+                      className="block text-[10px] font-medium mb-1 uppercase tracking-wider"
+                      style={{ color: "var(--text-tertiary)", letterSpacing: "0.06em" }}
+                    >
                       {prop.label}
                     </label>
                     <PropertyField
@@ -138,29 +198,41 @@ export default function PropertyPanel() {
 
         {/* Expert */}
         {expertProps.length > 0 && (
-          <div className="border-t border-gray-800 pt-3">
+          <div style={{ borderTop: "1px solid var(--border-dim)", paddingTop: "12px" }}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <span
+                className="text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: "var(--text-tertiary)", letterSpacing: "0.06em" }}
+              >
                 {t("properties.expert")}
               </span>
               <button
                 onClick={() => setShowExpert(!showExpert)}
-                className={`relative w-8 h-4 rounded-full transition-colors ${
-                  showExpert ? "bg-blue-500" : "bg-gray-600"
-                }`}
+                className="relative rounded-full transition-colors duration-100"
+                style={{
+                  width: "28px",
+                  height: "14px",
+                  background: showExpert ? "var(--accent)" : "var(--color-subtle)",
+                }}
               >
                 <span
-                  className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${
-                    showExpert ? "left-4" : "left-0.5"
-                  }`}
+                  className="absolute top-0.5 rounded-full bg-white transition-all duration-100"
+                  style={{
+                    width: "10px",
+                    height: "10px",
+                    left: showExpert ? "15px" : "2px",
+                  }}
                 />
               </button>
             </div>
             {showExpert && (
-              <div className="mt-3 space-y-4">
+              <div className="mt-3 space-y-3">
                 {expertProps.map((prop) => (
                   <div key={prop.name}>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">
+                    <label
+                      className="block text-[10px] font-medium mb-1 uppercase tracking-wider"
+                      style={{ color: "var(--text-tertiary)", letterSpacing: "0.06em" }}
+                    >
                       {prop.label}
                     </label>
                     <PropertyField
@@ -177,11 +249,11 @@ export default function PropertyPanel() {
 
         {/* Validation messages */}
         {!validationResult.valid && (
-          <div className="border-t border-gray-800 pt-3 space-y-1">
+          <div style={{ borderTop: "1px solid var(--border-dim)", paddingTop: "12px" }} className="space-y-1">
             {validationResult.messages.map((msg, i) => (
               <div key={i} className="flex items-start gap-2 text-xs">
-                <span className="text-red-400 shrink-0 mt-0.5">!</span>
-                <span className="text-red-300">{msg}</span>
+                <span style={{ color: "var(--error)" }} className="shrink-0 mt-0.5">!</span>
+                <span style={{ color: "var(--error)" }}>{msg}</span>
               </div>
             ))}
           </div>
@@ -189,10 +261,21 @@ export default function PropertyPanel() {
       </div>
 
       {/* Delete button */}
-      <div className="p-3 border-t border-gray-800">
+      <div className="p-2 shrink-0" style={{ borderTop: "1px solid var(--border-dim)" }}>
         <button
           onClick={() => removeNode(selectedNode.id)}
-          className="w-full px-3 py-1.5 text-sm rounded-md bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 transition-colors"
+          className="w-full px-3 py-1.5 text-xs rounded transition-colors duration-100"
+          style={{
+            background: "var(--error-muted)",
+            border: "1px solid transparent",
+            color: "var(--error)",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.borderColor = "var(--error)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.borderColor = "transparent";
+          }}
         >
           {t("workflow.deleteNode")}
         </button>

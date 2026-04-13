@@ -30,150 +30,238 @@ export default function OutputPanel() {
   const validErrors = validationMessages.filter((m) => m.level === "error");
   const validWarnings = validationMessages.filter((m) => m.level === "warning");
 
-  const icons = { error: "❌", warning: "⚠️", info: "ℹ️" } as const;
-  const colors = { error: "text-red-400", warning: "text-yellow-400", info: "text-blue-400" } as const;
-
-  const serialDot =
+  const serialDotColor =
     serialStatus === "connected"
-      ? "bg-green-500"
+      ? "var(--success)"
       : serialStatus === "connecting"
-        ? "bg-yellow-500"
+        ? "var(--warning)"
         : serialStatus === "error"
-          ? "bg-red-500"
-          : "bg-gray-600";
+          ? "var(--error)"
+          : "var(--text-tertiary)";
 
   return (
-    <div className={`border-t border-gray-800 bg-gray-900/50 flex flex-col ${collapsed ? "" : "h-48"}`}>
+    <div
+      className="flex flex-col shrink-0"
+      style={{
+        borderTop: "1px solid var(--border-dim)",
+        background: "var(--color-raised)",
+        height: collapsed ? "auto" : "176px",
+      }}
+    >
       {/* Tab bar */}
-      <div className="flex items-center border-b border-gray-800 shrink-0">
+      <div
+        className="flex items-center shrink-0"
+        style={{ borderBottom: collapsed ? "none" : "1px solid var(--border-dim)", height: "32px" }}
+      >
         {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="px-3 py-2 text-xs text-gray-500 hover:text-gray-300"
+          className="w-8 h-full flex items-center justify-center transition-colors duration-100"
+          style={{ color: "var(--text-tertiary)" }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
         >
-          {collapsed ? "▶" : "▼"}
+          <span className="text-[8px]">{collapsed ? "▲" : "▼"}</span>
         </button>
 
         {/* Tabs */}
         {(
           [
-            { id: "validation", label: "Validation", badge: validErrors.length + validWarnings.length, badgeOk: validationMessages.length === 0 },
-            { id: "compilation", label: "Compilation", badge: compileErrors.length + compileWarnings.length, badgeOk: compileStatus === "success" },
-            { id: "serial", label: "Série", badge: 0, serialDot: true },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => {
-              setActiveTab(tab.id as Tab);
-              if (collapsed) setCollapsed(false);
-            }}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === tab.id && !collapsed
-                ? "border-blue-500 text-gray-200"
-                : "border-transparent text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            {tab.label}
+            {
+              id: "validation" as Tab,
+              label: "Validation",
+              badge: validErrors.length + validWarnings.length,
+              ok: validationMessages.length === 0,
+            },
+            {
+              id: "compilation" as Tab,
+              label: "Compilation",
+              badge: compileErrors.length + compileWarnings.length,
+              ok: compileStatus === "success",
+              spinning: compileStatus === "compiling",
+            },
+            {
+              id: "serial" as Tab,
+              label: "Série",
+              dot: serialDotColor,
+            },
+          ]
+        ).map((tab) => {
+          const isActive = activeTab === tab.id && !collapsed;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (collapsed) setCollapsed(false);
+              }}
+              className="flex items-center gap-1.5 px-3 h-full text-xs font-medium transition-colors duration-100 relative"
+              style={{ color: isActive ? "var(--text-primary)" : "var(--text-tertiary)" }}
+              onMouseEnter={(e) => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
+              }}
+            >
+              {tab.label}
 
-            {/* Validation/compilation badge */}
-            {"badgeOk" in tab && tab.badgeOk && (
-              <span className="px-1.5 py-0.5 rounded-full bg-green-900/50 text-green-400 text-[10px]">✓</span>
-            )}
-            {"badge" in tab && tab.badge > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-red-900/50 text-red-400 text-[10px]">
-                {tab.badge}
-              </span>
-            )}
+              {/* Active indicator */}
+              {isActive && (
+                <span
+                  className="absolute bottom-0 left-2 right-2 h-px"
+                  style={{ background: "var(--accent)" }}
+                />
+              )}
 
-            {/* Serial status dot */}
-            {"serialDot" in tab && tab.serialDot && (
-              <span className={`w-1.5 h-1.5 rounded-full ${serialDot}`} />
-            )}
+              {/* OK badge */}
+              {"ok" in tab && tab.ok && (
+                <span
+                  className="text-[9px] px-1 rounded"
+                  style={{ background: "var(--success-muted)", color: "var(--success)" }}
+                >
+                  ✓
+                </span>
+              )}
 
-            {/* Compile spinner */}
-            {tab.id === "compilation" && compileStatus === "compiling" && (
-              <span className="animate-spin text-[10px]">⏳</span>
-            )}
-          </button>
-        ))}
+              {/* Error/warning count */}
+              {"badge" in tab && (tab.badge ?? 0) > 0 && (
+                <span
+                  className="text-[9px] px-1 rounded font-mono"
+                  style={{ background: "var(--error-muted)", color: "var(--error)" }}
+                >
+                  {tab.badge}
+                </span>
+              )}
+
+              {/* Serial dot */}
+              {"dot" in tab && (
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: tab.dot }}
+                />
+              )}
+
+              {/* Compile spinner */}
+              {"spinning" in tab && tab.spinning && (
+                <span className="text-[9px] animate-spin" style={{ color: "var(--warning)" }}>⌛</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Panel content */}
       {!collapsed && (
         <div className="flex-1 min-h-0 overflow-hidden">
-          {/* Validation tab */}
+          {/* Validation */}
           {activeTab === "validation" && (
-            <div className="h-full overflow-y-auto px-4 py-2 space-y-1">
+            <div className="h-full overflow-y-auto px-3 py-2 space-y-0.5">
               {validationMessages.length === 0 ? (
-                <p className="text-xs text-green-400 py-2">✓ Aucune erreur — le workflow est valide.</p>
+                <p className="text-xs py-1" style={{ color: "var(--success)" }}>
+                  ✓ Aucune erreur — le workflow est valide.
+                </p>
               ) : (
                 validationMessages.map((msg, i) => (
                   <div
                     key={i}
                     onClick={() => msg.nodeId && setSelectedNode(msg.nodeId)}
-                    className={`flex items-start gap-2 text-xs py-1 ${
-                      msg.nodeId ? "cursor-pointer hover:bg-gray-800/50 rounded px-1 -mx-1" : ""
-                    }`}
+                    className="flex items-start gap-2 text-xs py-1 rounded transition-colors duration-100"
+                    style={{ cursor: msg.nodeId ? "pointer" : "default" }}
+                    onMouseEnter={(e) => {
+                      if (msg.nodeId) (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "";
+                    }}
                   >
-                    <span className="shrink-0">{icons[msg.level]}</span>
-                    <span className={colors[msg.level]}>{msg.message}</span>
+                    <span className="shrink-0 mt-px">
+                      {msg.level === "error" ? "✗" : msg.level === "warning" ? "!" : "i"}
+                    </span>
+                    <span style={{
+                      color: msg.level === "error"
+                        ? "var(--error)"
+                        : msg.level === "warning"
+                          ? "var(--warning)"
+                          : "var(--text-secondary)",
+                    }}>
+                      {msg.message}
+                    </span>
                   </div>
                 ))
               )}
             </div>
           )}
 
-          {/* Compilation tab */}
+          {/* Compilation */}
           {activeTab === "compilation" && (
-            <div className="h-full overflow-y-auto px-4 py-2 space-y-2">
+            <div className="h-full overflow-y-auto px-3 py-2 space-y-2">
               {/* Toolchain install wizard */}
               {(toolchainMissing || installStatus === "installing" || installStatus === "success") && (
-                <div className="rounded-lg border border-yellow-800/60 bg-yellow-950/20 p-3 space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-yellow-300 font-medium">
-                    <span>🔧</span>
+                <div
+                  className="rounded p-3 space-y-2"
+                  style={{
+                    background: "var(--warning-muted)",
+                    border: "1px solid var(--border-default)",
+                  }}
+                >
+                  <div className="flex items-center gap-2 text-xs font-medium" style={{ color: "var(--warning)" }}>
+                    <span>⚙</span>
                     <span>arduino-cli requis pour compiler</span>
                   </div>
 
                   {installStatus === "idle" && (
-                    <div className="space-y-1.5">
-                      <p className="text-[11px] text-gray-400">
+                    <div className="space-y-2">
+                      <p className="text-[11px]" style={{ color: "var(--text-secondary)" }}>
                         L'outil de compilation Arduino n'est pas installé. EmbedFlow peut l'installer automatiquement.
                       </p>
                       <button
                         onClick={install}
-                        className="px-3 py-1.5 text-xs rounded-md bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
+                        className="px-3 py-1.5 text-xs rounded font-medium transition-colors duration-100 text-white"
+                        style={{ background: "var(--accent)" }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--accent-hover)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--accent)"; }}
                       >
-                        ⬇ Installer arduino-cli automatiquement
+                        ↓ Installer arduino-cli
                       </button>
                     </div>
                   )}
 
                   {installStatus === "installing" && installProgress && (
                     <div className="space-y-1.5">
-                      <p className="text-[11px] text-gray-300">{installProgress.message}</p>
-                      <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                      <p className="text-[11px]" style={{ color: "var(--text-secondary)" }}>{installProgress.message}</p>
+                      <div
+                        className="h-1 rounded-full overflow-hidden"
+                        style={{ background: "var(--color-subtle)" }}
+                      >
                         <div
-                          className="h-full rounded-full bg-blue-500 transition-all duration-300"
-                          style={{ width: `${installProgress.percent}%` }}
+                          className="h-full rounded-full transition-all duration-300"
+                          style={{ width: `${installProgress.percent}%`, background: "var(--accent)" }}
                         />
                       </div>
-                      <p className="text-[10px] text-gray-500 tabular-nums">{installProgress.percent}%</p>
+                      <p className="text-[10px] font-mono" style={{ color: "var(--text-tertiary)" }}>
+                        {installProgress.percent}%
+                      </p>
                     </div>
                   )}
 
                   {installStatus === "success" && (
-                    <p className="text-[11px] text-green-400 flex items-center gap-1.5">
-                      <span>✅</span> Installation terminée — vous pouvez maintenant compiler !
+                    <p className="text-[11px]" style={{ color: "var(--success)" }}>
+                      ✓ Installation terminée — vous pouvez maintenant compiler !
                     </p>
                   )}
 
                   {installStatus === "error" && installProgress && (
                     <div className="space-y-1.5">
-                      <p className="text-[11px] text-red-400">{installProgress.message}</p>
+                      <p className="text-[11px]" style={{ color: "var(--error)" }}>{installProgress.message}</p>
                       <button
                         onClick={install}
-                        className="px-3 py-1.5 text-xs rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+                        className="px-3 py-1.5 text-xs rounded transition-colors duration-100"
+                        style={{
+                          background: "var(--color-surface)",
+                          border: "1px solid var(--border-default)",
+                          color: "var(--text-secondary)",
+                        }}
                       >
                         Réessayer
                       </button>
@@ -183,62 +271,88 @@ export default function OutputPanel() {
               )}
 
               {compileStatus === "idle" && !toolchainMissing && (
-                <p className="text-xs text-gray-500 py-2">
+                <p className="text-xs py-1" style={{ color: "var(--text-tertiary)" }}>
                   Cliquez sur "Compiler" pour compiler le code généré.
                 </p>
               )}
 
               {compileStatus === "compiling" && (
-                <div className="flex items-center gap-2 text-xs text-yellow-400 py-2">
-                  <span className="animate-spin">⏳</span>
+                <div className="flex items-center gap-2 text-xs py-1" style={{ color: "var(--warning)" }}>
+                  <span className="animate-spin">⌛</span>
                   <span>Compilation en cours...</span>
                 </div>
               )}
 
               {(compileStatus === "success" || compileStatus === "error") && (
                 <>
-                  <div className={`flex items-center gap-2 text-xs py-1 ${
-                    compileStatus === "success" ? "text-green-400" : "text-red-400"
-                  }`}>
-                    <span>{compileStatus === "success" ? "✅" : "❌"}</span>
+                  <div
+                    className="flex items-center gap-2 text-xs py-1"
+                    style={{ color: compileStatus === "success" ? "var(--success)" : "var(--error)" }}
+                  >
+                    <span>{compileStatus === "success" ? "✓" : "✗"}</span>
                     <span>
                       {compileStatus === "success"
                         ? `Compilation réussie en ${duration}ms${binarySize ? ` — ${(binarySize / 1024).toFixed(1)} Ko` : ""}`
-                        : `Échec de la compilation`}
+                        : "Échec de la compilation"}
                     </span>
                   </div>
 
                   {compileErrors.map((err, i) => (
-                    <div key={i} className="flex flex-col gap-1 text-xs">
+                    <div key={i} className="flex flex-col gap-0.5 text-[11px]">
                       <div className="flex items-start gap-2">
-                        {err.line > 0 && <span className="text-red-400 shrink-0">Ligne {err.line}:</span>}
-                        <span className="text-red-300 whitespace-pre-wrap">{err.message}</span>
+                        {err.line > 0 && (
+                          <span className="font-mono shrink-0" style={{ color: "var(--error)" }}>
+                            L.{err.line}
+                          </span>
+                        )}
+                        <span className="whitespace-pre-wrap" style={{ color: "var(--error)" }}>
+                          {err.message}
+                        </span>
                         {err.blockLabel && (
-                          <span className="text-gray-600 shrink-0">({err.blockLabel})</span>
+                          <span className="shrink-0" style={{ color: "var(--text-tertiary)" }}>
+                            ({err.blockLabel})
+                          </span>
                         )}
                       </div>
                     </div>
                   ))}
 
                   {compileWarnings.map((w, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs">
-                      <span className="text-yellow-400 shrink-0">⚠ Ligne {w.line}:</span>
-                      <span className="text-yellow-300">{w.message}</span>
+                    <div key={i} className="flex items-start gap-2 text-[11px]">
+                      <span className="font-mono shrink-0" style={{ color: "var(--warning)" }}>L.{w.line}</span>
+                      <span style={{ color: "var(--warning)" }}>{w.message}</span>
                     </div>
                   ))}
 
                   {rawOutput && compileStatus === "error" && (
-                    <pre className="mt-1 text-[10px] text-gray-600 font-mono whitespace-pre-wrap break-all bg-gray-950 p-2 rounded">
+                    <pre
+                      className="mt-1 text-[10px] font-mono whitespace-pre-wrap break-all p-2 rounded"
+                      style={{
+                        background: "var(--color-base)",
+                        color: "var(--text-tertiary)",
+                      }}
+                    >
                       {rawOutput.slice(0, 500)}
                     </pre>
                   )}
 
                   {generatedCode && compileStatus === "success" && (
                     <details className="mt-1">
-                      <summary className="text-[10px] text-gray-600 cursor-pointer hover:text-gray-400">
+                      <summary
+                        className="text-[10px] cursor-pointer transition-colors duration-100"
+                        style={{ color: "var(--text-tertiary)" }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
+                      >
                         Voir le code généré
                       </summary>
-                      <pre className="mt-1 text-[10px] text-gray-400 font-mono whitespace-pre-wrap break-all bg-gray-950 p-2 rounded max-h-24 overflow-y-auto">
+                      <pre
+                        className="mt-1 text-[10px] font-mono whitespace-pre-wrap break-all p-2 rounded max-h-24 overflow-y-auto"
+                        style={{
+                          background: "var(--color-base)",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
                         {generatedCode}
                       </pre>
                     </details>
@@ -248,7 +362,7 @@ export default function OutputPanel() {
             </div>
           )}
 
-          {/* Serial tab */}
+          {/* Serial */}
           {activeTab === "serial" && <SerialMonitor />}
         </div>
       )}

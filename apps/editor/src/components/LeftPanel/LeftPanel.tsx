@@ -8,47 +8,55 @@ export default function LeftPanel() {
   const [activeTab, setActiveTab] = useState<LeftTab>("project");
 
   return (
-    <aside className="w-60 border-r border-gray-800 bg-gray-900/30 flex flex-col h-full">
+    <aside
+      className="flex flex-col h-full shrink-0"
+      style={{
+        width: "240px",
+        borderRight: "1px solid var(--border-dim)",
+        background: "var(--color-raised)",
+      }}
+    >
       {/* Tab bar */}
-      <div className="flex border-b border-gray-800 shrink-0">
-        <button
-          onClick={() => setActiveTab("project")}
-          className={`flex-1 px-3 py-1.5 text-[11px] font-medium transition-colors border-b-2 ${
-            activeTab === "project"
-              ? "border-blue-500 text-gray-200 bg-gray-900/50"
-              : "border-transparent text-gray-500 hover:text-gray-400"
-          }`}
-        >
-          Projet
-        </button>
-        <button
-          onClick={() => setActiveTab("blocks")}
-          className={`flex-1 px-3 py-1.5 text-[11px] font-medium transition-colors border-b-2 ${
-            activeTab === "blocks"
-              ? "border-blue-500 text-gray-200 bg-gray-900/50"
-              : "border-transparent text-gray-500 hover:text-gray-400"
-          }`}
-        >
-          Blocs
-        </button>
+      <div
+        className="flex shrink-0"
+        style={{ borderBottom: "1px solid var(--border-dim)", height: "32px" }}
+      >
+        {(["project", "blocks"] as const).map((tab) => {
+          const label = tab === "project" ? "Projet" : "Blocs";
+          const isActive = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className="flex-1 flex items-center justify-center text-xs font-medium transition-colors duration-100 relative"
+              style={{
+                color: isActive ? "var(--text-primary)" : "var(--text-tertiary)",
+                background: isActive ? "var(--color-overlay)" : "transparent",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
+              }}
+            >
+              {label}
+              {isActive && (
+                <span
+                  className="absolute bottom-0 left-2 right-2 h-px"
+                  style={{ background: "var(--accent)" }}
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {activeTab === "project" && <ProjectTree />}
-        {activeTab === "blocks" && <ActivityPanelInner />}
+        {activeTab === "blocks" && <ActivityPanel embedded />}
       </div>
     </aside>
-  );
-}
-
-/**
- * ActivityPanel without the <aside> wrapper — embedded inside LeftPanel.
- */
-function ActivityPanelInner() {
-  return (
-    <div className="h-full">
-      <ActivityPanel embedded />
-    </div>
   );
 }

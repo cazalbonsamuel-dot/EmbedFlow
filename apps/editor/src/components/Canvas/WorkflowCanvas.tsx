@@ -84,7 +84,6 @@ export default function WorkflowCanvas() {
 
     const layoutedNodes = autoLayout(currentNodes, currentEdges, layoutDir);
 
-    // Apply positions via onNodesChange
     const changes = layoutedNodes.map((n) => ({
       type: "position" as const,
       id: n.id,
@@ -92,7 +91,6 @@ export default function WorkflowCanvas() {
     }));
     onNodesChange(changes);
 
-    // Also update workflow positions
     const state = useWorkflowStore.getState();
     const updatedWorkflowNodes = state.workflow.nodes.map((wn) => {
       const layouted = layoutedNodes.find((ln) => ln.id === wn.id);
@@ -115,7 +113,11 @@ export default function WorkflowCanvas() {
   }, []);
 
   return (
-    <div ref={reactFlowWrapper} className="flex-1 h-full relative">
+    <div
+      ref={reactFlowWrapper}
+      className="flex-1 h-full relative"
+      style={{ background: "var(--color-base)" }}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -133,19 +135,44 @@ export default function WorkflowCanvas() {
         multiSelectionKeyCode="Shift"
         deleteKeyCode={["Backspace", "Delete"]}
         defaultEdgeOptions={{
-          style: { stroke: isSimRunning ? "#3b82f6" : "#6b7280", strokeWidth: 2 },
+          style: {
+            stroke: isSimRunning ? "#4B7CF3" : "#303036",
+            strokeWidth: 1.5,
+          },
           animated: isSimRunning,
         }}
+        style={{ background: "var(--color-base)" }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#374151" />
-        <Controls className="!bg-gray-800 !border-gray-700 !shadow-lg [&>button]:!bg-gray-800 [&>button]:!border-gray-700 [&>button]:!text-gray-300 [&>button:hover]:!bg-gray-700" />
-        <MiniMap
-          className="!bg-gray-900 !border-gray-700"
-          nodeColor={(node) => {
-            const data = node.data as { color?: string } | undefined;
-            return data?.color || "#6b7280";
+        {/* Subtle dot grid */}
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={24}
+          size={1}
+          color="rgba(255,255,255,0.04)"
+        />
+
+        {/* Controls */}
+        <Controls
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--border-default)",
+            borderRadius: "4px",
           }}
-          maskColor="rgba(0, 0, 0, 0.6)"
+          className="[&>button]:!bg-transparent [&>button]:!border-0 [&>button]:!text-[var(--text-tertiary)] [&>button:hover]:!bg-[var(--color-overlay)] [&>button:hover]:!text-[var(--text-secondary)]"
+        />
+
+        {/* MiniMap */}
+        <MiniMap
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--border-default)",
+            borderRadius: "4px",
+          }}
+          nodeColor={(node) => {
+            const d = node.data as { color?: string } | undefined;
+            return d?.color || "#303036";
+          }}
+          maskColor="rgba(9,9,11,0.7)"
         />
 
         {/* Auto-layout controls */}
@@ -153,14 +180,28 @@ export default function WorkflowCanvas() {
           <Panel position="top-right" className="flex items-center gap-1">
             <button
               onClick={handleAutoLayout}
-              className="px-2.5 py-1.5 text-xs rounded-md bg-gray-800/90 hover:bg-gray-700 text-gray-300 border border-gray-700 shadow-md transition-colors backdrop-blur-sm"
+              className="px-2.5 py-1 text-xs rounded transition-colors duration-100"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-secondary)",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-surface)"; }}
               title="Organiser automatiquement"
             >
-              ✨ Auto-layout
+              ✦ Auto-layout
             </button>
             <button
               onClick={toggleDirection}
-              className="px-2 py-1.5 text-xs rounded-md bg-gray-800/90 hover:bg-gray-700 text-gray-400 border border-gray-700 shadow-md transition-colors backdrop-blur-sm"
+              className="w-7 h-7 flex items-center justify-center rounded transition-colors duration-100"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-tertiary)",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-surface)"; }}
               title={layoutDir === "TB" ? "Vertical → Horizontal" : "Horizontal → Vertical"}
             >
               {layoutDir === "TB" ? "↕" : "↔"}
@@ -171,12 +212,29 @@ export default function WorkflowCanvas() {
         {/* Empty state */}
         {nodes.length === 0 && (
           <Panel position="top-center" className="!top-1/3">
-            <div className="text-center px-8 py-6 rounded-xl bg-gray-900/80 border border-gray-800 shadow-xl backdrop-blur-sm max-w-sm">
-              <div className="text-4xl mb-3 opacity-40">🔌</div>
-              <h3 className="text-sm font-semibold text-gray-300 mb-1">
+            <div
+              className="text-center px-8 py-6 rounded max-w-xs"
+              style={{
+                background: "var(--color-raised)",
+                border: "1px solid var(--border-default)",
+              }}
+            >
+              <div
+                className="text-3xl mb-3"
+                style={{ opacity: 0.3 }}
+              >
+                ⬡
+              </div>
+              <h3
+                className="text-xs font-semibold mb-1"
+                style={{ color: "var(--text-primary)" }}
+              >
                 Commencez votre projet
               </h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <p
+                className="text-[11px] leading-relaxed"
+                style={{ color: "var(--text-tertiary)" }}
+              >
                 Glissez un bloc depuis le panneau de gauche, ou utilisez un template pour démarrer rapidement.
               </p>
             </div>

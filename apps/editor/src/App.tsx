@@ -103,10 +103,8 @@ function App() {
       const data = await importWorkflow(file);
       const store = useWorkflowStore.getState();
 
-      // Load main workflow
       store.loadWorkflow(data.workflow, data.nodes, data.edges);
 
-      // If V2 multi-workflow import, restore sub-workflows
       if (data.allWorkflows && data.allWorkflows.length > 1) {
         const projectWorkflows = data.allWorkflows.map((entry) => ({
           id: entry.workflow.id,
@@ -121,10 +119,7 @@ function App() {
           }
         }
 
-        useWorkflowStore.setState({
-          projectWorkflows,
-          allWorkflowData,
-        });
+        useWorkflowStore.setState({ projectWorkflows, allWorkflowData });
       }
 
       syncCurrentProject();
@@ -136,7 +131,6 @@ function App() {
       });
     }
 
-    // Reset file input so re-importing the same file works
     e.target.value = "";
   }, [syncCurrentProject]);
 
@@ -169,152 +163,192 @@ function App() {
 
   return (
     <ReactFlowProvider>
-      <div className="h-screen flex flex-col bg-gray-950 text-gray-100">
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-gray-900 shrink-0">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-bold text-blue-400">EmbedFlow</h1>
+      <div className="h-screen flex flex-col" style={{ background: "var(--color-base)", color: "var(--text-primary)" }}>
+
+        {/* ── Header ── */}
+        <header
+          className="flex items-center justify-between px-3 shrink-0"
+          style={{
+            height: "44px",
+            background: "var(--color-raised)",
+            borderBottom: "1px solid var(--border-dim)",
+          }}
+        >
+          {/* Left zone: logo + project + board */}
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm font-semibold tracking-tight shrink-0" style={{ color: "var(--accent)" }}>
+              EmbedFlow
+            </span>
+
+            <div style={{ width: "1px", height: "16px", background: "var(--border-default)" }} className="shrink-0" />
+
             <ProjectSelector />
-            <div className="flex items-center gap-1.5">
-              <input
-                value={workflowName}
-                onChange={(e) => setWorkflowName(e.target.value)}
-                className="px-2 py-1 text-sm bg-transparent border border-transparent hover:border-gray-700 focus:border-blue-500 rounded text-gray-300 focus:outline-none w-44"
-              />
-              {saveIndicator && (
-                <span className="text-xs text-green-400 animate-pulse">✓ Sauvé</span>
-              )}
-            </div>
+
+            <input
+              value={workflowName}
+              onChange={(e) => setWorkflowName(e.target.value)}
+              className="px-2 py-0.5 text-sm rounded bg-transparent border border-transparent hover:border-[var(--border-default)] focus:border-[var(--border-strong)] focus:outline-none w-36 truncate transition-colors"
+              style={{ color: "var(--text-secondary)" }}
+            />
+
+            {saveIndicator && (
+              <span className="text-xs shrink-0" style={{ color: "var(--success)" }}>✓</span>
+            )}
+
             <select
               value={boardId}
               onChange={(e) => setBoardId(e.target.value)}
-              className="px-2 py-1 text-sm bg-gray-800 border border-gray-700 rounded text-gray-300 focus:outline-none focus:border-blue-500"
+              className="px-2 py-0.5 text-xs rounded border focus:outline-none w-36 h-7"
+              style={{
+                background: "var(--color-surface)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-secondary)",
+              }}
             >
               {boards.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
+                <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {/* Undo / Redo */}
+          {/* Right zone: actions */}
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Ghost: Undo / Redo */}
             <button
               onClick={() => useWorkflowStore.temporal.getState().undo()}
-              className="px-2 py-1.5 text-sm rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded text-sm transition-colors duration-100"
+              style={{ color: "var(--text-tertiary)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
               title="Annuler (Ctrl+Z)"
-            >
-              ↩
-            </button>
+            >↩</button>
             <button
               onClick={() => useWorkflowStore.temporal.getState().redo()}
-              className="px-2 py-1.5 text-sm rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded text-sm transition-colors duration-100"
+              style={{ color: "var(--text-tertiary)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
               title="Refaire (Ctrl+Y)"
-            >
-              ↪
-            </button>
+            >↪</button>
 
-            {/* Templates */}
+            {/* Ghost: Templates */}
             <button
               onClick={() => setShowTemplateDialog(true)}
-              className="px-2 py-1.5 text-xs rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded text-xs transition-colors duration-100"
+              style={{ color: "var(--text-tertiary)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
               title="Templates"
-            >
-              📋
-            </button>
+            >📋</button>
 
-            <div className="w-px h-6 bg-gray-700 mx-0.5" />
+            <div style={{ width: "1px", height: "16px", background: "var(--border-default)" }} className="mx-0.5" />
 
-            {/* Simulate */}
+            {/* Secondary: Simulate */}
             <button
               onClick={handleToggleSimulator}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                rightPanel === "simulator"
-                  ? "bg-blue-600 hover:bg-blue-500 text-white"
-                  : "bg-gray-800 hover:bg-gray-700 text-gray-300"
-              }`}
+              className="px-2.5 h-7 text-xs rounded border transition-colors duration-100"
+              style={rightPanel === "simulator"
+                ? { background: "var(--accent-muted)", border: "1px solid var(--accent)", color: "var(--accent)" }
+                : { background: "var(--color-surface)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }
+              }
+              onMouseEnter={(e) => { if (rightPanel !== "simulator") (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+              onMouseLeave={(e) => { if (rightPanel !== "simulator") (e.currentTarget as HTMLElement).style.background = "var(--color-surface)"; }}
             >
               {t("actions.simulate")}
             </button>
 
-            {/* Code */}
+            {/* Secondary: Code */}
             <button
               onClick={handleToggleCode}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                rightPanel === "code"
-                  ? "bg-blue-600 hover:bg-blue-500 text-white"
-                  : "bg-gray-800 hover:bg-gray-700 text-gray-300"
-              }`}
+              className="px-2.5 h-7 text-xs rounded border transition-colors duration-100"
+              style={rightPanel === "code"
+                ? { background: "var(--accent-muted)", border: "1px solid var(--accent)", color: "var(--accent)" }
+                : { background: "var(--color-surface)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }
+              }
+              onMouseEnter={(e) => { if (rightPanel !== "code") (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+              onMouseLeave={(e) => { if (rightPanel !== "code") (e.currentTarget as HTMLElement).style.background = "var(--color-surface)"; }}
             >
               {t("actions.viewCode")}
             </button>
 
-            {/* Wiring guide */}
+            {/* Secondary: Wiring */}
             <button
               onClick={handleToggleWiring}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                rightPanel === "wiring"
-                  ? "bg-purple-600 hover:bg-purple-500 text-white"
-                  : "bg-gray-800 hover:bg-gray-700 text-gray-300"
-              }`}
+              className="px-2.5 h-7 text-xs rounded border transition-colors duration-100"
+              style={rightPanel === "wiring"
+                ? { background: "var(--accent-muted)", border: "1px solid var(--accent)", color: "var(--accent)" }
+                : { background: "var(--color-surface)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }
+              }
+              onMouseEnter={(e) => { if (rightPanel !== "wiring") (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+              onMouseLeave={(e) => { if (rightPanel !== "wiring") (e.currentTarget as HTMLElement).style.background = "var(--color-surface)"; }}
               title="Guide de câblage"
             >
               Câblage
             </button>
 
-            {/* Compile */}
+            <div style={{ width: "1px", height: "16px", background: "var(--border-default)" }} className="mx-0.5" />
+
+            {/* Primary-ish: Compile */}
             <button
               onClick={compile}
               disabled={compileStatus === "compiling"}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+              className="px-2.5 h-7 text-xs rounded border transition-colors duration-100 disabled:cursor-wait"
+              style={
                 compileStatus === "compiling"
-                  ? "bg-yellow-700 text-yellow-200 cursor-wait"
+                  ? { background: "var(--warning-muted)", border: "1px solid var(--warning)", color: "var(--warning)" }
                   : compileStatus === "success"
-                    ? "bg-green-700 hover:bg-green-600 text-white"
+                    ? { background: "var(--success-muted)", border: "1px solid var(--success)", color: "var(--success)" }
                     : compileStatus === "error"
-                      ? "bg-red-700 hover:bg-red-600 text-white"
-                      : "bg-gray-800 hover:bg-gray-700 text-gray-300"
-              } disabled:cursor-wait`}
+                      ? { background: "var(--error-muted)", border: "1px solid var(--error)", color: "var(--error)" }
+                      : { background: "var(--color-surface)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }
+              }
             >
               {compileStatus === "compiling"
                 ? "Compilation..."
                 : compileStatus === "success"
-                  ? "Compilé"
+                  ? "Compilé ✓"
                   : compileStatus === "error"
-                    ? "Erreur"
+                    ? "Erreur ✗"
                     : t("actions.compile")}
             </button>
 
-            {/* Flash */}
+            {/* Primary: Flash */}
             <button
               onClick={openFlashDialog}
-              className="px-3 py-1.5 text-sm rounded-md bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+              className="px-2.5 h-7 text-xs rounded font-medium transition-colors duration-100 text-white"
+              style={{ background: "var(--accent)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--accent-hover)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--accent)"; }}
             >
               {t("actions.flash")}
             </button>
 
-            <div className="w-px h-6 bg-gray-700 mx-0.5" />
+            <div style={{ width: "1px", height: "16px", background: "var(--border-default)" }} className="mx-0.5" />
 
-            {/* Export */}
+            {/* Ghost: Export */}
             <button
               onClick={exportWorkflow}
-              className="px-2 py-1.5 text-xs rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+              className="px-2 h-7 text-xs rounded transition-colors duration-100"
+              style={{ color: "var(--text-tertiary)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
               title="Exporter (Ctrl+E)"
             >
               {t("actions.export")}
             </button>
 
-            {/* Import */}
+            {/* Ghost: Import */}
             <button
               onClick={handleTriggerImport}
-              className="px-2 py-1.5 text-xs rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+              className="px-2 h-7 text-xs rounded transition-colors duration-100"
+              style={{ color: "var(--text-tertiary)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
               title="Importer"
             >
               {t("actions.import")}
             </button>
 
-            {/* Hidden file input for import */}
             <input
               ref={fileInputRef}
               type="file"
@@ -323,18 +357,23 @@ function App() {
               className="hidden"
             />
 
-            {/* Shortcut help */}
+            {/* Ghost: Shortcuts */}
             <button
               onClick={handleToggleShortcutDialog}
-              className="px-2 py-1.5 text-xs rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded text-xs transition-colors duration-100"
+              style={{ color: "var(--text-tertiary)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
               title="Raccourcis (Ctrl+/)"
-            >
-              ?
-            </button>
+            >?</button>
 
+            {/* Ghost: Language */}
             <button
               onClick={toggleLanguage}
-              className="px-2 py-1.5 text-xs rounded-md bg-gray-800 hover:bg-gray-700 text-gray-400 transition-colors"
+              className="px-2 h-7 text-xs rounded transition-colors duration-100"
+              style={{ color: "var(--text-tertiary)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
             >
               {t("language.toggle")}
             </button>
@@ -344,13 +383,13 @@ function App() {
         {/* Import toast */}
         {importToast && (
           <div
-            className={`absolute top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg text-sm ${
-              importToast.type === "success"
-                ? "bg-green-900/90 text-green-300 border border-green-700"
-                : "bg-red-900/90 text-red-300 border border-red-700"
-            }`}
+            className="absolute top-12 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded text-xs shadow-lg"
+            style={{
+              background: importToast.type === "success" ? "var(--success-muted)" : "var(--error-muted)",
+              color: importToast.type === "success" ? "var(--success)" : "var(--error)",
+              border: `1px solid ${importToast.type === "success" ? "var(--success)" : "var(--error)"}`,
+            }}
           >
-            {importToast.type === "success" ? "✅ " : "❌ "}
             {importToast.message}
           </div>
         )}
@@ -372,10 +411,10 @@ function App() {
           {rightPanel === "wiring" && <WiringView />}
           {rightPanel === "property" && <PropertyPanel />}
         </div>
-      </div>
 
-      {/* Status bar */}
-      <StatusBar />
+        {/* Status bar */}
+        <StatusBar />
+      </div>
 
       {/* Modals */}
       <FlashDialog />

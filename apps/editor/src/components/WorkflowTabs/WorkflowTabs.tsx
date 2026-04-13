@@ -14,7 +14,6 @@ export default function WorkflowTabs() {
   const [renameValue, setRenameValue] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus rename input when it appears
   useEffect(() => {
     if (renamingId && renameInputRef.current) {
       renameInputRef.current.focus();
@@ -22,7 +21,6 @@ export default function WorkflowTabs() {
     }
   }, [renamingId]);
 
-  // Close context menu on click outside
   useEffect(() => {
     if (!contextMenu) return;
     const handler = () => setContextMenu(null);
@@ -60,30 +58,16 @@ export default function WorkflowTabs() {
     deleteSubWorkflow(id);
   };
 
-  // Only show tabs bar if there's more than 1 workflow
-  if (projectWorkflows.length <= 1) {
-    return (
-      <div className="flex items-center border-b border-gray-800 bg-gray-900/70 px-2 shrink-0">
-        <div className="flex items-center gap-1 py-1">
-          <span className="px-3 py-1 text-xs font-medium text-gray-300 bg-gray-800 rounded-t-md border border-gray-700 border-b-0 flex items-center gap-1.5">
-            <span className="text-[10px]">🏠</span>
-            Main
-          </span>
-          <button
-            onClick={handleAdd}
-            className="px-2 py-1 text-xs text-gray-500 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors"
-            title="Ajouter un sous-workflow"
-          >
-            +
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex items-center border-b border-gray-800 bg-gray-900/70 px-2 shrink-0">
-      <div className="flex items-center gap-0.5 py-1 overflow-x-auto">
+    <div
+      className="flex items-center px-2 shrink-0"
+      style={{
+        height: "32px",
+        background: "var(--color-raised)",
+        borderBottom: "1px solid var(--border-dim)",
+      }}
+    >
+      <div className="flex items-center gap-px overflow-x-auto flex-1">
         {projectWorkflows.map((wf) => {
           const isActive = wf.id === activeWorkflowId;
 
@@ -92,14 +76,26 @@ export default function WorkflowTabs() {
               key={wf.id}
               onClick={() => switchWorkflow(wf.id)}
               onContextMenu={(e) => handleContextMenu(e, wf.id)}
-              className={`group flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-t-md border transition-colors whitespace-nowrap ${
-                isActive
-                  ? "bg-gray-800 text-gray-200 border-gray-700 border-b-gray-800"
-                  : "bg-transparent text-gray-500 border-transparent hover:text-gray-300 hover:bg-gray-800/50"
-              }`}
+              className="flex items-center gap-1.5 px-2.5 rounded text-xs transition-colors duration-100 whitespace-nowrap shrink-0"
+              style={{
+                height: "24px",
+                background: isActive ? "var(--color-overlay)" : "transparent",
+                color: isActive ? "var(--text-primary)" : "var(--text-tertiary)",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)";
+                  (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                  (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
+                }
+              }}
             >
-              {wf.isMain && <span className="text-[10px]">🏠</span>}
-              {!wf.isMain && <span className="text-[10px] text-blue-400">📎</span>}
+              <span className="text-[10px] opacity-60">{wf.isMain ? "⬡" : "◈"}</span>
 
               {renamingId === wf.id ? (
                 <input
@@ -111,11 +107,23 @@ export default function WorkflowTabs() {
                     if (e.key === "Enter") handleFinishRename();
                     if (e.key === "Escape") setRenamingId(null);
                   }}
-                  className="bg-gray-700 text-gray-200 text-xs px-1 py-0 rounded border border-blue-500 focus:outline-none w-28"
+                  className="text-xs px-1 py-0 rounded w-24 focus:outline-none"
+                  style={{
+                    background: "var(--color-surface)",
+                    border: "1px solid var(--accent)",
+                    color: "var(--text-primary)",
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : (
                 <span className="truncate max-w-[120px]">{wf.name}</span>
+              )}
+
+              {isActive && (
+                <span
+                  className="w-1 h-1 rounded-full shrink-0"
+                  style={{ background: "var(--accent)" }}
+                />
               )}
             </button>
           );
@@ -123,7 +131,16 @@ export default function WorkflowTabs() {
 
         <button
           onClick={handleAdd}
-          className="px-2 py-1 text-xs text-gray-500 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors ml-1"
+          className="w-6 h-6 flex items-center justify-center rounded text-sm transition-colors duration-100 ml-0.5 shrink-0"
+          style={{ color: "var(--text-tertiary)" }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)";
+            (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "";
+            (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
+          }}
           title="Ajouter un sous-workflow"
         >
           +
@@ -133,19 +150,30 @@ export default function WorkflowTabs() {
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed z-50 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[140px]"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          className="fixed z-50 py-1 rounded shadow-xl min-w-[130px]"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+            background: "var(--color-surface)",
+            border: "1px solid var(--border-default)",
+          }}
         >
           <button
             onClick={() => handleStartRename(contextMenu.id)}
-            className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+            className="w-full text-left px-3 py-1.5 text-xs transition-colors duration-100"
+            style={{ color: "var(--text-secondary)" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
           >
             Renommer
           </button>
           {!projectWorkflows.find((w) => w.id === contextMenu.id)?.isMain && (
             <button
               onClick={() => handleDelete(contextMenu.id)}
-              className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700 transition-colors"
+              className="w-full text-left px-3 py-1.5 text-xs transition-colors duration-100"
+              style={{ color: "var(--error)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--error-muted)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
             >
               Supprimer
             </button>

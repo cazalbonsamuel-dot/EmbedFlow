@@ -30,7 +30,7 @@ export default function StatusBar() {
         estimatedRam = result.estimatedRam;
         estimatedFlash = result.estimatedFlash;
       } catch {
-        // Ignore codegen errors for stats
+        // ignore
       }
     }
 
@@ -41,37 +41,44 @@ export default function StatusBar() {
   }, [nodes.length, edges.length, boardId, workflow]);
 
   const ramColor =
-    stats.ramPercent > 80 ? "text-red-400" : stats.ramPercent > 50 ? "text-yellow-400" : "text-green-400";
+    stats.ramPercent > 80 ? "var(--error)" : stats.ramPercent > 50 ? "var(--warning)" : "var(--success)";
   const flashColor =
-    stats.flashPercent > 80 ? "text-red-400" : stats.flashPercent > 50 ? "text-yellow-400" : "text-green-400";
+    stats.flashPercent > 80 ? "var(--error)" : stats.flashPercent > 50 ? "var(--warning)" : "var(--success)";
 
   return (
-    <div className="flex items-center gap-4 px-4 py-1 border-t border-gray-800 bg-gray-900/80 text-[10px] text-gray-500 shrink-0">
-      <span>
-        {stats.nodeCount} bloc{stats.nodeCount !== 1 ? "s" : ""}
-      </span>
-      <span>
-        {stats.edgeCount} connexion{stats.edgeCount !== 1 ? "s" : ""}
-      </span>
+    <div
+      className="flex items-center gap-3 px-3 shrink-0 font-mono"
+      style={{
+        height: "22px",
+        borderTop: "1px solid var(--border-dim)",
+        background: "var(--color-raised)",
+        color: "var(--text-tertiary)",
+        fontSize: "10px",
+      }}
+    >
+      <span>{stats.nodeCount} bloc{stats.nodeCount !== 1 ? "s" : ""}</span>
+      <span style={{ color: "var(--border-strong)" }}>·</span>
+      <span>{stats.edgeCount} connexion{stats.edgeCount !== 1 ? "s" : ""}</span>
 
       {stats.nodeCount > 0 && (
         <>
-          <div className="w-px h-3 bg-gray-800" />
+          <span style={{ color: "var(--border-strong)" }}>·</span>
           <span>
-            RAM :{" "}
-            <span className={ramColor}>
+            RAM{" "}
+            <span style={{ color: ramColor }}>
               {stats.estimatedRam > 1024
-                ? `${(stats.estimatedRam / 1024).toFixed(1)} Ko`
-                : `${stats.estimatedRam} o`}
+                ? `${(stats.estimatedRam / 1024).toFixed(1)}K`
+                : `${stats.estimatedRam}B`}
               {stats.totalRam > 0 ? ` (${stats.ramPercent}%)` : ""}
             </span>
           </span>
+          <span style={{ color: "var(--border-strong)" }}>·</span>
           <span>
-            Flash :{" "}
-            <span className={flashColor}>
+            Flash{" "}
+            <span style={{ color: flashColor }}>
               {stats.estimatedFlash > 1024
-                ? `${(stats.estimatedFlash / 1024).toFixed(1)} Ko`
-                : `${stats.estimatedFlash} o`}
+                ? `${(stats.estimatedFlash / 1024).toFixed(1)}K`
+                : `${stats.estimatedFlash}B`}
               {stats.totalFlash > 0 ? ` (${stats.flashPercent}%)` : ""}
             </span>
           </span>
@@ -79,7 +86,7 @@ export default function StatusBar() {
       )}
 
       <div className="flex-1" />
-      <span className="text-gray-600">EmbedFlow v0.0.0</span>
+      <span style={{ color: "var(--text-tertiary)", opacity: 0.5 }}>EmbedFlow</span>
     </div>
   );
 }

@@ -13,7 +13,7 @@ const categoryIcons: Record<string, string> = {
   Temps: "⏱️",
   Communication: "📡",
   Variables: "🧮",
-  "Sous-programmes": "📎",
+  "Sous-programmes": "◈",
 };
 
 function ActivityItem({ activity, disabled }: { activity: ActivityDefinition; disabled: boolean }) {
@@ -26,14 +26,21 @@ function ActivityItem({ activity, disabled }: { activity: ActivityDefinition; di
     <div
       draggable={!disabled}
       onDragStart={onDragStart}
-      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-grab active:cursor-grabbing transition-colors ${
+      className="flex items-center gap-2 px-2 py-1.5 rounded text-xs cursor-grab active:cursor-grabbing transition-colors duration-100"
+      style={
         disabled
-          ? "opacity-40 cursor-not-allowed bg-gray-800/30 text-gray-600"
-          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/70"
-      }`}
-      title={disabled ? "Non compatible avec la carte selectionnee" : activity.description}
+          ? { color: "var(--text-tertiary)", cursor: "not-allowed", opacity: 0.4 }
+          : { color: "var(--text-secondary)", background: "transparent" }
+      }
+      onMouseEnter={(e) => {
+        if (!disabled) (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)";
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) (e.currentTarget as HTMLElement).style.background = "transparent";
+      }}
+      title={disabled ? "Non compatible avec la carte sélectionnée" : activity.description}
     >
-      <span className="text-base shrink-0">{activity.icon}</span>
+      <span className="text-sm shrink-0 leading-none">{activity.icon}</span>
       <span className="truncate">{activity.label}</span>
     </div>
   );
@@ -59,18 +66,23 @@ export default function ActivityPanel({ embedded }: { embedded?: boolean } = {})
   const content = (
     <>
       {/* Search */}
-      <div className="p-3 border-b border-gray-800">
+      <div className="p-2 shrink-0" style={{ borderBottom: "1px solid var(--border-dim)" }}>
         <input
           type="text"
           placeholder={t("workflow.addNode")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded-md text-gray-300 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+          className="w-full px-2.5 py-1.5 text-xs rounded focus:outline-none"
+          style={{
+            background: "var(--color-surface)",
+            border: "1px solid var(--border-default)",
+            color: "var(--text-primary)",
+          }}
         />
       </div>
 
       {/* Categories */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
         {categories.map((cat) => {
           const activities = listByCategory(cat).filter(
             (a) => !search || a.label.toLowerCase().includes(search.toLowerCase()),
@@ -83,15 +95,18 @@ export default function ActivityPanel({ embedded }: { embedded?: boolean } = {})
             <div key={cat}>
               <button
                 onClick={() => toggleCategory(cat)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-300 transition-colors"
+                className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest transition-colors duration-100"
+                style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
               >
-                <span className="text-sm">{categoryIcons[cat] || "📦"}</span>
+                <span className="text-[11px]">{categoryIcons[cat] || "·"}</span>
                 <span className="flex-1 text-left">{cat}</span>
-                <span className="text-[10px]">{isOpen ? "▼" : "▶"}</span>
+                <span className="text-[8px]">{isOpen ? "▼" : "▶"}</span>
               </button>
 
               {isOpen && (
-                <div className="space-y-1 ml-1 mb-2">
+                <div className="space-y-px ml-1 mb-1">
                   {activities.map((activity) => (
                     <ActivityItem
                       key={activity.id}
@@ -108,13 +123,12 @@ export default function ActivityPanel({ embedded }: { embedded?: boolean } = {})
     </>
   );
 
-  if (embedded) {
-    return <div className="flex flex-col h-full">{content}</div>;
-  }
-
   return (
-    <aside className="w-60 border-r border-gray-800 bg-gray-900/30 flex flex-col h-full">
+    <div
+      className="flex flex-col h-full"
+      style={!embedded ? { width: "240px", borderRight: "1px solid var(--border-dim)", background: "var(--color-raised)" } : {}}
+    >
       {content}
-    </aside>
+    </div>
   );
 }

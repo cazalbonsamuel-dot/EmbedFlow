@@ -8,10 +8,10 @@ import { useSimulationStore } from "../../stores/simulation-store";
 import { getEffectiveActivity } from "../../services/effective-activity";
 
 const portTypeColors: Record<string, string> = {
-  execution: "#6b7280",
-  number: "#3b82f6",
-  boolean: "#22c55e",
-  string: "#f97316",
+  execution: "#46464F",
+  number: "#4B7CF3",
+  boolean: "#22C55E",
+  string: "#F0A429",
 };
 
 function ActivityNode({ id, data, selected }: NodeProps<Node<ActivityNodeData>>) {
@@ -38,35 +38,49 @@ function ActivityNode({ id, data, selected }: NodeProps<Node<ActivityNodeData>>)
   const isCurrent = isSimActive && currentNodeId === id;
   const isError = isSimActive && errorNodeId === id;
 
-  // Validation badges
   const nodeErrors = validationMessages.filter((m) => m.nodeId === id && m.level === "error");
   const nodeWarnings = validationMessages.filter((m) => m.nodeId === id && m.level === "warning");
   const hasErrors = nodeErrors.length > 0;
   const hasWarnings = nodeWarnings.length > 0;
 
-  let borderClass = selected ? "border-blue-400 ring-2 ring-blue-400/30" : "border-gray-700";
+  // Determine outline state
+  let outlineColor = "transparent";
+  let outlineStyle = "none";
   if (isError) {
-    borderClass = "border-red-500 ring-2 ring-red-500/30";
+    outlineColor = "var(--error)";
+    outlineStyle = "2px solid var(--error)";
   } else if (isCurrent) {
-    borderClass = "border-blue-400 ring-2 ring-blue-400/30 animate-pulse";
-  } else if (hasErrors && !selected) {
-    borderClass = "border-red-500/60";
-  } else if (hasWarnings && !selected) {
-    borderClass = "border-yellow-500/50";
+    outlineColor = "var(--accent)";
+    outlineStyle = "2px solid var(--accent)";
+  } else if (selected) {
+    outlineStyle = "2px solid var(--accent)";
+  } else if (hasErrors) {
+    outlineStyle = "1px solid var(--error)";
+  } else if (hasWarnings) {
+    outlineStyle = "1px solid var(--warning)";
   }
 
   return (
     <div
-      className={`rounded-lg shadow-lg bg-gray-800 border-2 min-w-[180px] relative ${borderClass}`}
+      className="relative"
+      style={{
+        minWidth: "180px",
+        borderRadius: "6px",
+        background: "var(--color-raised)",
+        border: "1px solid var(--border-default)",
+        outline: outlineStyle,
+        outlineOffset: "2px",
+        animation: isCurrent ? "pulse 1s ease-in-out infinite" : "none",
+      }}
     >
       {/* Validation badge */}
       {(hasErrors || hasWarnings) && (
         <div
-          className={`absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md z-10 ${
-            hasErrors
-              ? "bg-red-600 text-white"
-              : "bg-yellow-500 text-yellow-950"
-          }`}
+          className="absolute -top-2 -right-2 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold z-10"
+          style={{
+            background: hasErrors ? "var(--error)" : "var(--warning)",
+            color: hasErrors ? "#fff" : "#000",
+          }}
           title={
             hasErrors
               ? nodeErrors.map((m) => m.message).join("\n")
@@ -77,14 +91,11 @@ function ActivityNode({ id, data, selected }: NodeProps<Node<ActivityNodeData>>)
         </div>
       )}
 
-      {/* Header */}
+      {/* Color accent strip (left border) */}
       <div
-        className="flex items-center gap-2 px-3 py-2 rounded-t-md text-white text-sm font-medium"
-        style={{ backgroundColor: data.color }}
-      >
-        <span className="text-base">{data.icon}</span>
-        <span className="truncate">{data.label}</span>
-      </div>
+        className="absolute left-0 top-0 bottom-0 rounded-l-[6px]"
+        style={{ width: "3px", background: data.color }}
+      />
 
       {/* Input handles */}
       {activity.inputs.map((input, i) => (
@@ -97,29 +108,50 @@ function ActivityNode({ id, data, selected }: NodeProps<Node<ActivityNodeData>>)
             left: `${((i + 1) / (activity.inputs.length + 1)) * 100}%`,
             width: input.type === "execution" ? 10 : 8,
             height: input.type === "execution" ? 10 : 8,
-            backgroundColor: portTypeColors[input.type],
+            backgroundColor: portTypeColors[input.type] || "#46464F",
             borderRadius: input.type === "execution" ? 2 : "50%",
-            border: "2px solid #1f2937",
+            border: "2px solid var(--color-raised)",
           }}
           title={input.name}
         />
       ))}
 
-      {/* Body — show configured properties summary */}
-      <div className="px-3 py-2 text-xs text-gray-400 space-y-0.5">
+      {/* Header */}
+      <div
+        className="flex items-center gap-2 pl-4 pr-3 py-2 rounded-t-[6px]"
+        style={{ borderBottom: "1px solid var(--border-dim)" }}
+      >
+        <span className="text-sm leading-none shrink-0">{data.icon}</span>
+        <span
+          className="text-xs font-medium truncate"
+          style={{ color: "var(--text-primary)" }}
+        >
+          {data.label}
+        </span>
+      </div>
+
+      {/* Body */}
+      <div className="pl-4 pr-3 py-1.5 space-y-0.5">
         {activity.properties
           .filter((p) => p.level === "essential" && data.properties[p.name] !== undefined)
           .slice(0, 3)
           .map((prop) => (
-            <div key={prop.name} className="flex justify-between gap-2">
-              <span className="text-gray-500">{prop.label}</span>
-              <span className="text-gray-300 truncate max-w-[100px]">
+            <div key={prop.name} className="flex justify-between gap-2 items-center">
+              <span className="text-[10px] truncate shrink-0" style={{ color: "var(--text-tertiary)" }}>
+                {prop.label}
+              </span>
+              <span
+                className="text-[11px] truncate max-w-[90px] font-mono"
+                style={{ color: "var(--text-secondary)" }}
+              >
                 {String(data.properties[prop.name])}
               </span>
             </div>
           ))}
         {activity.properties.filter((p) => p.level === "essential").length === 0 && (
-          <div className="text-gray-600 italic">Aucun parametre</div>
+          <div className="text-[10px] italic" style={{ color: "var(--text-tertiary)" }}>
+            Aucun paramètre
+          </div>
         )}
       </div>
 
@@ -134,9 +166,9 @@ function ActivityNode({ id, data, selected }: NodeProps<Node<ActivityNodeData>>)
             left: `${((i + 1) / (activity.outputs.length + 1)) * 100}%`,
             width: output.type === "execution" ? 10 : 8,
             height: output.type === "execution" ? 10 : 8,
-            backgroundColor: portTypeColors[output.type],
+            backgroundColor: portTypeColors[output.type] || "#46464F",
             borderRadius: output.type === "execution" ? 2 : "50%",
-            border: "2px solid #1f2937",
+            border: "2px solid var(--color-raised)",
           }}
           title={output.name}
         />

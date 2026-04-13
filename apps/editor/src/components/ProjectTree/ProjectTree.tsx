@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { getActivity } from "@embedflow/activity-registry";
 import { useWorkflowStore } from "../../stores/workflow-store";
-import type { SubWorkflowMeta } from "../../stores/workflow-store";
 
 export default function ProjectTree() {
   const workflow = useWorkflowStore((s) => s.workflow);
@@ -23,7 +22,6 @@ export default function ProjectTree() {
   const [contextMenu, setContextMenu] = useState<{ id: string; x: number; y: number; type: "workflow" | "node" } | null>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-expand active workflow
   useEffect(() => {
     setExpandedWorkflows((prev) => {
       const next = new Set(prev);
@@ -86,7 +84,6 @@ export default function ProjectTree() {
     return allWorkflowData[wfId]?.workflow.arguments || [];
   };
 
-  // Sort: Main first, then alphabetical
   const sortedWorkflows = [...projectWorkflows].sort((a, b) => {
     if (a.isMain && !b.isMain) return -1;
     if (!a.isMain && b.isMain) return 1;
@@ -94,23 +91,48 @@ export default function ProjectTree() {
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ background: "var(--color-raised)" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800">
-        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Projet</span>
+      <div
+        className="flex items-center justify-between px-3 shrink-0"
+        style={{ height: "32px", borderBottom: "1px solid var(--border-dim)" }}
+      >
+        <span
+          className="text-[10px] font-semibold uppercase tracking-widest"
+          style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
+        >
+          Projet
+        </span>
         <button
           onClick={() => addSubWorkflow(`Sous-workflow ${projectWorkflows.length}`)}
-          className="text-[10px] text-gray-500 hover:text-blue-400 transition-colors px-1.5 py-0.5 rounded hover:bg-gray-800"
+          className="text-[10px] px-1.5 py-0.5 rounded transition-colors duration-100"
+          style={{ color: "var(--text-tertiary)" }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)";
+            (e.currentTarget as HTMLElement).style.color = "var(--accent)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "";
+            (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
+          }}
           title="Nouveau sous-workflow"
         >
           + Nouveau
         </button>
       </div>
 
-      {/* Board info */}
-      <div className="px-3 py-1.5 border-b border-gray-800/50 flex items-center gap-2">
-        <span className="text-[10px] text-gray-600">Carte :</span>
-        <span className="text-[10px] text-gray-400 font-medium">{boardId}</span>
+      {/* Board badge */}
+      <div
+        className="flex items-center gap-1.5 px-3 py-1.5 shrink-0"
+        style={{ borderBottom: "1px solid var(--border-dim)" }}
+      >
+        <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>Carte</span>
+        <span
+          className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+          style={{ background: "var(--color-surface)", color: "var(--text-secondary)", border: "1px solid var(--border-default)" }}
+        >
+          {boardId}
+        </span>
       </div>
 
       {/* Tree */}
@@ -125,29 +147,38 @@ export default function ProjectTree() {
             <div key={wfMeta.id}>
               {/* Workflow row */}
               <div
-                className={`flex items-center gap-1 px-2 py-1 cursor-pointer group transition-colors ${
-                  isActive
-                    ? "bg-blue-900/20 text-gray-200"
-                    : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-300"
-                }`}
+                className="flex items-center gap-1 px-2 py-1 cursor-pointer transition-colors duration-100"
+                style={{
+                  background: isActive ? "var(--accent-muted)" : "transparent",
+                  color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
+                }}
                 onClick={() => {
                   if (!isActive) switchWorkflow(wfMeta.id);
                   toggleExpand(wfMeta.id);
                 }}
                 onContextMenu={(e) => handleContextMenu(e, wfMeta.id, "workflow")}
                 onDoubleClick={() => handleStartRename(wfMeta.id)}
+                onMouseEnter={(e) => {
+                  if (!isActive) (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                }}
               >
                 {/* Expand arrow */}
-                <span className="text-[9px] w-3 text-center text-gray-600 shrink-0">
+                <span
+                  className="text-[9px] w-3 text-center shrink-0"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
                   {wfNodes.length > 0 || wfArgs.length > 0 ? (isExpanded ? "▼" : "▶") : ""}
                 </span>
 
                 {/* Icon */}
-                <span className="text-xs shrink-0">
-                  {wfMeta.isMain ? "🏠" : "📎"}
+                <span className="text-[11px] shrink-0" style={{ color: "var(--text-tertiary)" }}>
+                  {wfMeta.isMain ? "⬡" : "◈"}
                 </span>
 
-                {/* Name */}
+                {/* Name / rename input */}
                 {renamingId === wfMeta.id ? (
                   <input
                     ref={renameInputRef}
@@ -158,41 +189,60 @@ export default function ProjectTree() {
                       if (e.key === "Enter") handleFinishRename();
                       if (e.key === "Escape") setRenamingId(null);
                     }}
-                    className="flex-1 bg-gray-700 text-gray-200 text-xs px-1 py-0 rounded border border-blue-500 focus:outline-none"
+                    className="flex-1 text-xs px-1 py-0 rounded focus:outline-none"
+                    style={{
+                      background: "var(--color-surface)",
+                      border: "1px solid var(--accent)",
+                      color: "var(--text-primary)",
+                    }}
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <span className={`flex-1 text-xs truncate ${isActive ? "font-medium" : ""}`}>
+                  <span
+                    className="flex-1 text-xs truncate"
+                    style={{ fontWeight: isActive ? 500 : 400 }}
+                  >
                     {wfMeta.name}
                   </span>
                 )}
 
-                {/* Badge: node count */}
-                <span className="text-[9px] text-gray-600 shrink-0">
-                  {wfNodes.length}
+                {/* Node count */}
+                <span className="text-[9px] shrink-0" style={{ color: "var(--text-tertiary)" }}>
+                  {wfNodes.length > 0 ? wfNodes.length : ""}
                 </span>
               </div>
 
               {/* Children */}
               {isExpanded && (
-                <div className="ml-3">
-                  {/* Arguments section for sub-workflows */}
+                <div style={{ marginLeft: "12px" }}>
+                  {/* Arguments */}
                   {!wfMeta.isMain && wfArgs.length > 0 && (
-                    <div className="ml-3 border-l border-gray-800/50">
-                      <div className="px-2 py-0.5 text-[9px] text-gray-600 uppercase tracking-wider font-semibold">
+                    <div style={{ marginLeft: "12px", borderLeft: "1px solid var(--border-dim)" }}>
+                      <div
+                        className="px-2 py-0.5 text-[9px] uppercase tracking-wider font-semibold"
+                        style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}
+                      >
                         Arguments
                       </div>
                       {wfArgs.map((arg) => (
                         <div
                           key={arg.id}
-                          className="flex items-center gap-1.5 px-2 py-0.5 text-[11px] text-gray-500"
+                          className="flex items-center gap-1.5 px-2 py-0.5 text-[11px]"
+                          style={{ color: "var(--text-tertiary)" }}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            arg.direction === "in" ? "bg-blue-500" : arg.direction === "out" ? "bg-green-500" : "bg-yellow-500"
-                          }`} />
-                          <span className="truncate">{arg.name}</span>
-                          <span className="text-[9px] text-gray-600 shrink-0">{arg.type}</span>
-                          <span className="text-[9px] text-gray-700 shrink-0">
+                          <span
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{
+                              background: arg.direction === "in"
+                                ? "var(--accent)"
+                                : arg.direction === "out"
+                                  ? "var(--success)"
+                                  : "var(--warning)",
+                            }}
+                          />
+                          <span className="truncate" style={{ color: "var(--text-secondary)" }}>{arg.name}</span>
+                          <span className="text-[9px] shrink-0" style={{ color: "var(--text-tertiary)" }}>{arg.type}</span>
+                          <span className="text-[9px] shrink-0 font-mono" style={{ color: "var(--text-tertiary)" }}>
                             {arg.direction === "in" ? "IN" : arg.direction === "out" ? "OUT" : "I/O"}
                           </span>
                         </div>
@@ -202,7 +252,7 @@ export default function ProjectTree() {
 
                   {/* Nodes */}
                   {wfNodes.length > 0 && (
-                    <div className="ml-3 border-l border-gray-800/50">
+                    <div style={{ marginLeft: "12px", borderLeft: "1px solid var(--border-dim)" }}>
                       {wfNodes.map((node) => {
                         const activity = getActivity(node.data.activityId);
                         const isNodeActive = isActive && selectedNodeId === node.id;
@@ -214,23 +264,33 @@ export default function ProjectTree() {
                         return (
                           <div
                             key={node.id}
-                            className={`flex items-center gap-1.5 px-2 py-0.5 cursor-pointer transition-colors rounded-r-sm ${
-                              isNodeActive
-                                ? "bg-blue-900/30 text-gray-200"
-                                : "text-gray-500 hover:bg-gray-800/40 hover:text-gray-400"
-                            }`}
+                            className="flex items-center gap-1.5 px-2 py-0.5 cursor-pointer transition-colors duration-100 rounded-r"
+                            style={{
+                              background: isNodeActive ? "var(--color-overlay)" : "transparent",
+                              color: isNodeActive ? "var(--text-primary)" : "var(--text-tertiary)",
+                            }}
                             onClick={(e) => {
                               e.stopPropagation();
                               if (!isActive) switchWorkflow(wfMeta.id);
                               setSelectedNode(node.id);
                             }}
                             onContextMenu={(e) => handleContextMenu(e, node.id, "node")}
+                            onMouseEnter={(e) => {
+                              if (!isNodeActive) {
+                                (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)";
+                                (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isNodeActive) {
+                                (e.currentTarget as HTMLElement).style.background = "transparent";
+                                (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)";
+                              }
+                            }}
                           >
-                            <span className="text-[10px] shrink-0">{activity?.icon || "?"}</span>
+                            <span className="text-[10px] shrink-0">{activity?.icon || "·"}</span>
                             <span className="text-[11px] truncate flex-1">
-                              {isInvokeNode && targetName
-                                ? `Appeler: ${targetName}`
-                                : node.data.label}
+                              {isInvokeNode && targetName ? `→ ${targetName}` : node.data.label}
                             </span>
                           </div>
                         );
@@ -238,9 +298,12 @@ export default function ProjectTree() {
                     </div>
                   )}
 
-                  {/* Empty state */}
+                  {/* Empty */}
                   {wfNodes.length === 0 && wfArgs.length === 0 && (
-                    <div className="ml-6 px-2 py-1 text-[10px] text-gray-700 italic">
+                    <div
+                      className="px-5 py-1 text-[10px] italic"
+                      style={{ color: "var(--text-tertiary)" }}
+                    >
                       Vide
                     </div>
                   )}
@@ -254,33 +317,41 @@ export default function ProjectTree() {
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed z-50 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[140px]"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          className="fixed z-50 py-1 rounded shadow-xl min-w-[130px]"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+            background: "var(--color-surface)",
+            border: "1px solid var(--border-default)",
+          }}
         >
           {contextMenu.type === "workflow" && (
             <>
               <button
                 onClick={() => handleStartRename(contextMenu.id)}
-                className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+                className="w-full text-left px-3 py-1.5 text-xs transition-colors duration-100"
+                style={{ color: "var(--text-secondary)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
               >
                 Renommer
               </button>
               <button
-                onClick={() => {
-                  switchWorkflow(contextMenu.id);
-                  setContextMenu(null);
-                }}
-                className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+                onClick={() => { switchWorkflow(contextMenu.id); setContextMenu(null); }}
+                className="w-full text-left px-3 py-1.5 text-xs transition-colors duration-100"
+                style={{ color: "var(--text-secondary)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
               >
                 Ouvrir
               </button>
               {!projectWorkflows.find((w) => w.id === contextMenu.id)?.isMain && (
                 <button
-                  onClick={() => {
-                    deleteSubWorkflow(contextMenu.id);
-                    setContextMenu(null);
-                  }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700 transition-colors"
+                  onClick={() => { deleteSubWorkflow(contextMenu.id); setContextMenu(null); }}
+                  className="w-full text-left px-3 py-1.5 text-xs transition-colors duration-100"
+                  style={{ color: "var(--error)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--error-muted)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
                 >
                   Supprimer
                 </button>
@@ -289,13 +360,13 @@ export default function ProjectTree() {
           )}
           {contextMenu.type === "node" && (
             <button
-              onClick={() => {
-                setSelectedNode(contextMenu.id);
-                setContextMenu(null);
-              }}
-              className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700 transition-colors"
+              onClick={() => { setSelectedNode(contextMenu.id); setContextMenu(null); }}
+              className="w-full text-left px-3 py-1.5 text-xs transition-colors duration-100"
+              style={{ color: "var(--text-secondary)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-overlay)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
             >
-              Selectionner
+              Sélectionner
             </button>
           )}
         </div>
