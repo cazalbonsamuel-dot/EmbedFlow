@@ -1,1 +1,96 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --color-base: #09090B;
+    --color-raised: #111113;
+    --color-surface: #18181B;
+    --color-overlay: #1E1E23;
+    --color-subtle: #27272D;
+
+    /* Borders */
+    --border-dim: #232328;
+    --border-default: #303036;
+    --border-strong: #46464F;
+
+    /* Text */
+    --text-primary: #F2F2F4;
+    --text-secondary: #8C8C9A;
+    --text-tertiary: #52525F;
+
+    /* Accent */
+    --accent: #4B7CF3;
+    --accent-hover: #3A6BE0;
+    --accent-muted: #17213D;
+
+    /* Status */
+    --success: #22C55E;
+    --success-muted: #0C2216;
+    --error: #F26969;
+    --error-muted: #250E0E;
+    --warning: #F0A429;
+    --warning-muted: #241608;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background-color: var(--color-base);
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'Consolas', 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--border-strong);
+  }
+
+  /* Input / select base reset */
+  input, select, textarea {
+    background-color: var(--color-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 100ms;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--border-strong);
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2352525F'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+}

@@ -20,15 +20,48 @@
     "confirm": "Confirm",
     "simulate": "Simulate",
     "compile": "Compile",
-    "flash": "Flash to board",
-    "viewCode": "View code"
+    "flash": "Flash",
+    "viewCode": "Code",
+    "wiring": "Wiring",
+    "undo": "Undo",
+    "redo": "Redo",
+    "saved": "Saved!",
+    "shortcuts": "Shortcuts"
+  },
+  "projects": {
+    "title": "Projects",
+    "new": "New project",
+    "delete": "Delete project",
+    "deleteConfirm": "Delete this project? This cannot be undone.",
+    "current": "(current)",
+    "empty": "No saved projects."
+  },
+  "import": {
+    "success": "Workflow imported successfully",
+    "error": "Invalid workflow file"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "undo": "Undo",
+    "redo": "Redo",
+    "save": "Save project",
+    "copy": "Copy selected blocks",
+    "paste": "Paste blocks",
+    "exportWf": "Export workflow",
+    "delete": "Delete selected blocks",
+    "help": "Show this dialog"
   },
   "workflow": {
     "untitled": "Untitled project",
-    "addNode": "Add block",
-    "deleteNode": "Delete block",
+    "addNode": "Search...",
+    "deleteNode": "Delete this block",
     "validate": "Validate",
     "generate": "Generate code"
+  },
+  "properties": {
+    "selectBlock": "Select a block to see its properties",
+    "options": "Options",
+    "expert": "Advanced mode"
   },
   "status": {
     "ready": "Ready",
@@ -48,6 +81,73 @@
     "variables": "Variables"
   },
   "language": {
-    "toggle": "Francais"
+    "toggle": "FR"
+  },
+  "simulator": {
+    "title": "Simulator",
+    "play": "Play",
+    "pause": "Pause",
+    "step": "Step",
+    "reset": "Reset",
+    "speed": "Speed",
+    "sensors": "Simulated sensors",
+    "outputs": "Outputs",
+    "serial": "Serial console",
+    "clearSerial": "Clear",
+    "success": "Workflow is running",
+    "error": "Error",
+    "ready": "Ready",
+    "running": "Running",
+    "paused": "Paused",
+    "loop": "Loop #",
+    "noSensors": "No sensors in workflow",
+    "noOutputs": "Start simulation to see outputs"
+  },
+  "compile": {
+    "title": "Compilation",
+    "idle": "Click Compile to build the generated code",
+    "compiling": "Compiling...",
+    "success": "Compilation successful",
+    "error": "Compilation failed",
+    "size": "Size",
+    "duration": "Duration",
+    "viewCode": "View generated code"
+  },
+  "flash": {
+    "title": "Flash to board",
+    "detect": "Detect boards",
+    "refresh": "Refresh",
+    "noPort": "No board detected",
+    "selectPort": "Select a port",
+    "send": "Flash",
+    "cancel": "Cancel",
+    "success": "Code flashed successfully!",
+    "error": "Flash error"
+  },
+  "wiring": {
+    "title": "Wiring guide",
+    "progress": "Progress",
+    "reset": "Reset",
+    "complete": "Wiring complete — ready to flash!",
+    "empty": "Add blocks with components to see the wiring guide.",
+    "hint": "Check each connection as you wire your circuit."
+  },
+  "serial": {
+    "title": "Serial monitor",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "send": "Send",
+    "clear": "Clear",
+    "portLabel": "Port",
+    "baudRate": "Baud",
+    "graph": "Graph",
+    "waiting": "Waiting for data...",
+    "disconnected": "Connect a serial port to begin.",
+    "status": {
+      "connected": "Connected",
+      "connecting": "Connecting...",
+      "disconnected": "Disconnected",
+      "error": "Error"
+    }
   }
 }
